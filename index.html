@@ -1,0 +1,1903 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Worldseed</title>
+<meta name="description" content="A living world that evolves from single cells into nations in real time.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#090f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Worldseed">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html, body { margin: 0; overscroll-behavior: none; }
+body { font: 14px system-ui, -apple-system, sans-serif; -webkit-touch-callout: none; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an observatory console. The living globe is the hero; the history rail sits beside it, the powers dock below. */
+:root {
+  --bg: #090f12; --panel: #10191c; --raise: #172327; --line: #22343a; --line2: #2e474e;
+  --ink: #ece7da; --muted: #96a7a3; --faint: #62766f;
+  --gold: #e9b54d; --gold-soft: rgba(233, 181, 77, .14); --gold-ink: #1d1505;
+  --k-life: #72d4a6; --k-death: #e27d6c; --k-war: #f0604c; --k-peace: #82b5ea; --k-tech: #b7a0f2; --k-city: #dac28c; --k-nature: #5fc2c6; --k-nation: #e79ac4; --k-culture: #8fd0e8; --k-wonder: #f3d27e; --k-you: #f4f1ea;
+  --f-display: 'Syne', 'Avenir Next', 'Segoe UI', sans-serif;
+  --f-body: 'Figtree', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); -webkit-text-size-adjust: 100%; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.app { max-width: 1480px; margin: 0 auto; padding-block: 12px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 12px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1 1 260px; }
+.mark { font: 800 24px/1 var(--f-display); letter-spacing: -.01em; }
+.mark span { color: var(--gold); }
+.wname { font: 500 13px/1.2 var(--f-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; border: 0; padding: 5px 7px; border-radius: 6px; cursor: pointer; min-width: 0; }
+.wname:hover { color: var(--ink); background: var(--raise); }
+.clock { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font: 500 12px/1 var(--f-mono); padding: 7px 10px; border-radius: 999px; border: 1px solid var(--line2); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip.era { color: var(--gold); border-color: rgba(233, 181, 77, .45); background: var(--gold-soft); font-family: var(--f-display); font-weight: 700; letter-spacing: .02em; font-size: 13px; }
+.chip.live { display: inline-flex; align-items: center; gap: 6px; }
+.chip.live i { width: 7px; height: 7px; border-radius: 50%; background: #5ee08f; box-shadow: 0 0 8px #5ee08f; animation: pulse 2s infinite; }
+.chip.live.ff i { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+@keyframes pulse { 50% { opacity: .35; } }
+.spirit { display: flex; margin-left: auto; align-items: center; gap: 8px; padding: 5px 11px 5px 7px; border-radius: 9px; background: var(--panel); border: 1px solid var(--line2); }
+.orb { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3cf, var(--gold) 45%, #8a5a12 100%); box-shadow: 0 0 12px rgba(233, 181, 77, .5); flex: none; }
+.spirit b { font: 600 15px/1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.spirit small { display: block; font: 10.5px/1.2 var(--f-mono); color: var(--faint); }
+
+/* stage */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 16px; align-items: start; }
+@media (max-width: 1020px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.left { display: grid; gap: 12px; min-width: 0; }
+.globe { position: relative; width: 100%; height: min(76vh, 780px); min-height: 320px; border-radius: 16px; overflow: hidden; background: #03070b; border: 1px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+@media (max-width: 1020px) { .globe { height: auto; aspect-ratio: 1 / 1; max-height: 74vh; } }
+.globe.dragging { cursor: grabbing; }
+.globe.aiming { cursor: crosshair; }
+.globe canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#ov { pointer-events: none; }
+.hud { position: absolute; display: flex; gap: 6px; z-index: 2; }
+.hud.tl { top: 10px; left: 10px; }
+.hud.tr { top: 10px; right: 10px; flex-direction: column; }
+.hud.bl { left: 10px; bottom: 10px; right: 10px; pointer-events: none; }
+.seg { display: inline-flex; border: 1px solid var(--line2); border-radius: 9px; overflow: hidden; background: rgba(12, 19, 22, .82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.seg button { background: none; border: 0; padding: 7px 10px; font: 500 12px/1 var(--f-mono); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--ink); box-shadow: inset 0 -2px 0 var(--gold); }
+.rbtn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line2); background: rgba(12, 19, 22, .82); color: var(--ink); font: 600 17px/1 var(--f-mono); cursor: pointer; display: grid; place-items: center; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.rbtn[aria-pressed="true"] { color: var(--gold); border-color: rgba(233, 181, 77, .6); }
+.rbtn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.legend { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; font: 500 11px/1.3 var(--f-mono); color: rgba(236, 231, 218, .78); background: rgba(6, 10, 12, .62); padding: 5px 8px; border-radius: 6px; }
+.legend.aim { color: var(--gold); }
+.tip { position: absolute; pointer-events: none; background: rgba(9, 15, 17, .93); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 10px; font-size: 12.5px; line-height: 1.4; max-width: 250px; z-index: 3; }
+.tip .t1 { font-weight: 600; }
+.tip .t2 { color: var(--muted); font-family: var(--f-mono); font-size: 11.5px; }
+.pin { position: absolute; left: 10px; right: 10px; bottom: 44px; z-index: 3; background: rgba(9, 15, 17, .94); border: 1px solid var(--line2); border-radius: 12px; padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 13.5px; max-width: 420px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.pin .p1 { font-weight: 600; }
+.pin .p2 { color: var(--muted); font-size: 12.5px; grid-column: 1; }
+.pin .x { grid-row: 1 / span 3; grid-column: 2; align-self: start; background: none; border: 0; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 4px; }
+.mapbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hint { flex: 1 1 260px; min-width: 0; font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; align-items: baseline; }
+.hint em { font-style: normal; font: 600 10.5px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); flex: none; }
+
+/* dock */
+.dock { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.dock-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.dock-title { font: 700 15px/1 var(--f-display); letter-spacing: .01em; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { background: none; border: 1px solid transparent; border-radius: 8px; padding: 6px 11px; font-size: 13px; color: var(--muted); cursor: pointer; font-weight: 500; }
+.tab[aria-selected="true"] { color: var(--ink); background: var(--raise); border-color: var(--line2); }
+.powers { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+.pw { display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 9px; align-items: center; text-align: left; padding: 9px 10px; border-radius: 10px; background: var(--raise); border: 1px solid var(--line); cursor: pointer; min-height: 48px; }
+.pw svg { grid-row: span 2; width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; color: var(--muted); }
+.pw .pn { font-size: 13px; font-weight: 600; line-height: 1.2; }
+.pw .pc { font: 500 11px/1.3 var(--f-mono); color: var(--faint); }
+.pw[aria-pressed="true"] { border-color: var(--gold); background: linear-gradient(180deg, rgba(233, 181, 77, .16), rgba(233, 181, 77, .05)); }
+.pw[aria-pressed="true"] svg { color: var(--gold); }
+.pw.poor { opacity: .5; }
+.pdesc { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); min-height: 32px; }
+.pdesc strong { color: var(--ink); font-weight: 600; }
+.pdesc .go { color: var(--gold); font-weight: 600; }
+.ghost { background: none; border: 1px solid var(--line2); color: var(--muted); border-radius: 8px; padding: 6px 11px; cursor: pointer; font-size: 12.5px; }
+.ghost:hover { color: var(--ink); }
+
+/* panel */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; min-width: 0; max-height: calc(100vh - 96px); min-height: 460px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.ptabs { padding: 10px; border-bottom: 1px solid var(--line); }
+.panel .body { overflow-y: auto; padding: 14px 14px 20px; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; }
+.bnav { display: none; }
+@media (max-width: 1020px) {
+  .app { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .panel { position: static; max-height: none; min-height: 0; border: 0; background: none; }
+  .panel .body { padding: 0; overflow: visible; }
+  .ptabs { display: none; }
+  .app[data-view="globe"] .panel { display: none; }
+  .app:not([data-view="globe"]) .left { display: none; }
+  .bnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgba(9, 15, 18, .96); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .bnav button { flex: 1; background: none; border: 0; color: var(--faint); display: grid; justify-items: center; gap: 3px; font: 600 11px/1 var(--f-body); padding: 6px 0; cursor: pointer; }
+  .bnav svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .bnav button[aria-current="page"] { color: var(--gold); }
+  .globe { aspect-ratio: auto; height: min(calc(100vw - 32px), 47vh); min-height: 260px; max-height: none; }
+  .hint span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .seg button { padding: 7px 9px; }
+  .left { gap: 10px; }
+  .hint { font-size: 12.5px; }
+  .dock { padding: 10px; gap: 8px; }
+  .dock-title { display: none; }
+  .powers { display: flex; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .pw { flex: 0 0 132px; scroll-snap-align: start; }
+}
+.vhead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.vhead h2 { margin: 0; font: 800 20px/1.15 var(--f-display); }
+.back { background: var(--raise); border: 1px solid var(--line2); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.chart { position: relative; margin: 6px 0 4px; }
+.chart svg { display: block; overflow: visible; touch-action: pan-y; }
+.chart .ttl { font-weight: 600; font-size: 14px; margin: 14px 0 2px; }
+.chart .sub { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.chart .lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.chart .lg span { display: inline-flex; align-items: center; gap: 5px; }
+.chart .lg i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.ctip { position: absolute; pointer-events: none; background: rgba(9, 15, 17, .95); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 9px; font-size: 12px; line-height: 1.45; z-index: 2; min-width: 130px; }
+.ctip b { font: 500 11px/1.3 var(--f-mono); color: var(--muted); display: block; margin-bottom: 2px; font-weight: 500; }
+.ctip div { display: flex; justify-content: space-between; gap: 10px; }
+.ctip span { color: var(--muted); }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tblwrap { overflow-x: auto; margin: 0 -2px; }
+.tbl th { text-align: left; font: 600 10.5px/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 6px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 9px 6px; border-bottom: 1px solid rgba(34, 52, 58, .7); vertical-align: top; }
+.tbl td.n { text-align: right; font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+.tbl th.n { text-align: right; }
+.tbl tr[data-cs] { cursor: pointer; }
+.tbl tr[data-cs]:hover td { background: var(--raise); }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.mood { font: 600 10px/1 var(--f-mono); padding: 3px 6px; border-radius: 5px; letter-spacing: .03em; white-space: nowrap; }
+.mood.up { background: rgba(114, 212, 166, .15); color: var(--k-life); }
+.mood.down { background: rgba(240, 96, 76, .15); color: var(--k-war); }
+.tierbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; margin: 6px 0 4px; }
+.tierbar i { display: block; height: 100%; }
+.tierlg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.tierlg i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+.help h3 { font: 700 15px/1.2 var(--f-display); margin: 18px 0 6px; }
+.help h3:first-child { margin-top: 0; }
+.help p, .help li { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+.help p { margin: 0 0 8px; }
+.help ul { margin: 0; padding-left: 18px; }
+.help b { color: var(--ink); font-weight: 600; }
+.help .pl { display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 10px; align-items: start; padding: 7px 0; border-bottom: 1px solid rgba(34, 52, 58, .7); font-size: 13px; }
+.help .pl svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.help .pl span { color: var(--muted); }
+.help .pl em { font: 500 11px/1.4 var(--f-mono); color: var(--faint); font-style: normal; white-space: nowrap; }
+.census { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.stat { background: var(--raise); border-radius: 9px; padding: 8px 10px; min-width: 0; }
+.stat b { display: block; font: 600 17px/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11.5px; color: var(--muted); }
+.ages { display: grid; gap: 0; margin-bottom: 14px; border-left: 2px solid var(--line2); padding-left: 12px; }
+.age { position: relative; padding: 4px 0 8px; }
+.age::before { content: ""; position: absolute; left: -18px; top: 9px; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px var(--panel); }
+.age.next::before { background: var(--panel); border: 2px dashed var(--gold); width: 6px; height: 6px; }
+.age b { font: 700 13.5px/1.2 var(--f-display); letter-spacing: .01em; }
+.age span { display: block; font: 11.5px/1.4 var(--f-mono); color: var(--muted); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.flt { background: var(--raise); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.flt[aria-pressed="true"] { color: var(--gold-ink); background: var(--gold); border-color: var(--gold); font-weight: 600; }
+.dayhead { font: 600 10.5px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: 14px 0 4px; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; }
+.log li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 8px 2px; border-bottom: 1px solid rgba(34, 52, 58, .7); }
+.log .tm { font: 500 11.5px/1.5 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.log .when { font: 500 10.5px/1.2 var(--f-mono); color: var(--faint); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.log .kd { font: 600 9.5px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 5px; border-radius: 4px; }
+.log .what { font-size: 13.5px; line-height: 1.45; margin-top: 2px; }
+.log li.big .what { font-weight: 600; color: #f3e6c4; }
+.log li.you .what { color: #fff; }
+.log li.fresh { animation: fresh 1.8s ease-out; }
+@keyframes fresh { from { background: rgba(233, 181, 77, .18); } to { background: transparent; } }
+.sec { font: 600 10.5px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: 16px 0 8px; }
+.sec:first-child { margin-top: 0; }
+.row { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: start; padding: 9px 6px; border-radius: 8px; cursor: pointer; border: 0; background: none; width: 100%; text-align: left; }
+.row:hover { background: var(--raise); }
+.sw { width: 12px; height: 12px; border-radius: 3px; margin-top: 4px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15); }
+.nm { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.nm i { font-weight: 500; }
+.meta { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.num { font: 500 12px/1.3 var(--f-mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bars { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center; margin-top: 5px; font: 11px/1 var(--f-mono); color: var(--faint); }
+.bar { height: 5px; border-radius: 3px; background: var(--line); position: relative; overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.bar.mark::after { content: ""; position: absolute; top: -1px; bottom: -1px; left: 58%; width: 1.5px; background: var(--gold); }
+.pill { display: inline-block; font: 600 10px/1 var(--f-mono); padding: 3px 6px; border-radius: 5px; margin-left: 6px; vertical-align: 2px; letter-spacing: .04em; }
+.pill.war { background: rgba(240, 96, 76, .18); color: var(--k-war); }
+.pill.faith { background: rgba(130, 181, 234, .16); color: var(--k-peace); }
+.tiers { display: flex; gap: 8px; flex-wrap: wrap; font: 11px/1.3 var(--f-mono); color: var(--faint); margin-top: 4px; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 6px 2px; line-height: 1.55; }
+.kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; font-size: 13.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+/* overlays */
+.toast { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: #1b2a2e; border: 1px solid var(--line2); color: var(--ink); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; max-width: calc(100vw - 32px); z-index: 30; }
+.toast.on { opacity: 1; transform: translateX(-50%); }
+.modal { position: fixed; inset: 0; background: rgba(3, 6, 8, .74); display: grid; place-items: center; padding: 16px; padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 40; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.card { background: var(--panel); border: 1px solid var(--line2); border-radius: 14px; padding: 22px; width: min(540px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; display: grid; gap: 14px; }
+.card h2 { margin: 0; font: 800 23px/1.15 var(--f-display); text-wrap: balance; }
+.card p { margin: 0; color: var(--muted); }
+.card .kicker { font: 600 11px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.prog { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .15s; }
+.btn { background: var(--gold); color: var(--gold-ink); border: 0; border-radius: 9px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.btn.danger { background: var(--k-war); color: #1a0703; }
+.away { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.away li { display: grid; grid-template-columns: 8px 1fr; gap: 10px; font-size: 14px; }
+.away .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; }
+.away small { display: block; font: 11px/1.4 var(--f-mono); color: var(--faint); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 12.5px; color: var(--muted); }
+.field input { background: var(--bg); border: 1px solid var(--line2); border-radius: 8px; padding: 9px 11px; color: var(--ink); font: 16px var(--f-body); }
+.rowbtns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.small { font-size: 12.5px; color: var(--faint); }
+@media (max-width: 520px) { .mark { font-size: 21px; } .chip { padding: 6px 8px; font-size: 11px; } .chip.era { font-size: 12px; } .spirit { padding: 4px 9px 4px 6px; } .spirit small { display: none; } .orb { width: 16px; height: 16px; } .clock { gap: 5px; } }
+@media (prefers-reduced-motion: reduce) { .log li.fresh, .chip.live i { animation: none; } .toast { transition: none; } }
+</style>
+
+<div class="app" data-view="globe" id="app">
+  <header class="top">
+    <div class="brand"><div class="mark">World<span>seed</span></div><button class="wname" id="wname" title="Rename or restart your world">…</button></div>
+    <div class="clock"><span class="chip era" id="era">Primordial Seas</span><span class="chip" id="date">0 years</span><span class="chip live" id="live"><i></i><span>Live</span></span>
+    <div class="spirit" title="Spirit refills by itself, even while you are away"><div class="orb"></div><div><b id="spirit">60</b><small>spirit · +3/min</small></div></div></div>
+  </header>
+
+  <main class="stage">
+    <section class="left">
+      <div class="globe" id="globe">
+        <canvas id="gl" aria-label="Your world, seen from space"></canvas>
+        <canvas id="ov"></canvas>
+        <div class="hud tl"><div class="seg" id="modes" role="group" aria-label="Map view">
+          <button data-m="world" aria-pressed="true">World</button><button data-m="peoples" aria-pressed="false">Nations</button><button data-m="life" aria-pressed="false">Life</button>
+        </div></div>
+        <div class="hud tr">
+          <button class="rbtn" id="zin" aria-label="Zoom in">+</button>
+          <button class="rbtn" id="zout" aria-label="Zoom out">&minus;</button>
+          <button class="rbtn" id="spin" aria-label="Slowly spin the globe" aria-pressed="true"><svg viewBox="0 0 20 20"><path d="M16 10a6 6 0 1 1-2-4.5"/><path d="M14.5 2.5V6H11"/></svg></button>
+        </div>
+        <div class="hud bl"><span class="legend" id="legend">Drag to spin · pinch to zoom · tap a place</span></div>
+        <div class="tip" id="tip" hidden></div>
+        <div class="pin" id="pin" hidden></div>
+      </div>
+      <div class="mapbar">
+        <div class="hint"><em>Idea</em><span id="hint">Watch the first cells spread through the shallows.</span></div>
+        <div class="seg" id="speed" role="group" aria-label="Time speed">
+          <button data-s="1" aria-pressed="true" title="The world moves in real time">Live</button>
+          <button data-s="60" aria-pressed="false" title="One hour passes every minute">1 h/min</button>
+          <button data-s="1440" aria-pressed="false" title="One day passes every minute">1 day/min</button>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="dock-head"><div class="dock-title">Your powers</div><div class="tabs" id="pgroups" role="tablist"></div></div>
+        <div class="powers" id="powers"></div>
+        <div class="pdesc" id="pdesc">Choose a power, then tap the globe to use it.</div>
+      </div>
+    </section>
+
+    <aside class="panel" id="panel">
+      <div class="tabs ptabs" id="ptabs" role="tablist">
+        <button class="tab" data-v="hist" aria-selected="true">History</button>
+        <button class="tab" data-v="stats" aria-selected="false">Statistics</button>
+        <button class="tab" data-v="help" aria-selected="false">How to play</button>
+      </div>
+      <div class="body" id="pbody"></div>
+    </aside>
+  </main>
+</div>
+<nav class="bnav" id="bnav" aria-label="Sections">
+  <button data-v="globe" aria-current="page"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.5 2.2 3.5 4.8 3.5 7.5s-1 5.3-3.5 7.5c-2.5-2.2-3.5-4.8-3.5-7.5s1-5.3 3.5-7.5z"/></svg>World</button>
+  <button data-v="hist"><svg viewBox="0 0 20 20"><path d="M4 5h12M4 10h12M4 15h8"/></svg>History</button>
+  <button data-v="stats"><svg viewBox="0 0 20 20"><path d="M4 16V9M10 16V4M16 16v-5"/></svg>Statistics</button>
+  <button data-v="help"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M8 7.8a2.2 2.2 0 1 1 3 2c-.7.3-1 .8-1 1.5v.4M10 14.3v.2"/></svg>Help</button>
+</nav>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
+
+<script>
+// ===== Worldseed simulation core (v2: globe, real-time history) =====
+const W = 128, H = 64, N = W * H, SEA = 118;
+const TICK_LIFE = 1000, TICK_CIV = 10000; // real milliseconds per tick: 1 s while life evolves, 10 s once people exist
+const K_CIV = 50;
+const BIO = { DEEP: 0, SEA: 1, ICE: 2, COAST: 3, DESERT: 4, GRASS: 5, FOREST: 6, JUNGLE: 7, TUNDRA: 8, SNOW: 9, MOUNT: 10 };
+const BIOME = [
+  { n: 'Deep ocean', c: [22, 50, 82], f: 0.35 },
+  { n: 'Shallow sea', c: [38, 96, 124], f: 0.85 },
+  { n: 'Sea ice', c: [200, 218, 228], f: 0.08 },
+  { n: 'Coast', c: [200, 186, 140], f: 0.55 },
+  { n: 'Desert', c: [210, 178, 112], f: 0.14 },
+  { n: 'Grassland', c: [134, 166, 86], f: 0.72 },
+  { n: 'Forest', c: [62, 116, 66], f: 0.86 },
+  { n: 'Jungle', c: [36, 104, 58], f: 1.0 },
+  { n: 'Tundra', c: [144, 152, 128], f: 0.3 },
+  { n: 'Snow', c: [236, 240, 242], f: 0.04 },
+  { n: 'Mountains', c: [122, 110, 100], f: 0.18 },
+];
+const TECHS = [
+  ['Fire', 1.3], ['Stone tools', 1.3], ['Language', 1.2], ['Shelter', 1.3], ['Farming', 3, 'farm'], ['Pottery', 1.2],
+  ['Animal taming', 1.4], ['The wheel', 1.2, 'wheel'], ['Writing', 1.1], ['Bronze working', 1.3, 'age'], ['Sailing', 1.1, 'sail'],
+  ['Mathematics', 1.1], ['Iron working', 1.3, 'age'], ['Philosophy', 1.1, 'age'], ['Engineering', 1.4], ['Astronomy', 1.1],
+  ['Paper', 1.1, 'age'], ['Printing press', 1.2, 'age'], ['Gunpowder', 1.1], ['Navigation', 1.2, 'nav'], ['Banking', 1.2],
+  ['Steam engine', 1.6, 'age'], ['Railways', 1.4, 'rail'], ['Electricity', 1.5, 'elec'], ['Medicine', 1.8], ['Radio', 1.1],
+  ['Flight', 1.2, 'age'], ['Computers', 1.3], ['Nuclear power', 1.2], ['Internet', 1.2], ['Spaceflight', 1.1, 'age'],
+  ['Orbital stations', 1.1], ['Fusion power', 1.5], ['Mars colony', 1.2], ['Starships', 1.1, 'age'],
+];
+const AGES = ['Stone Age', 'Bronze Age', 'Iron Age', 'Classical Age', 'Medieval Age', 'Renaissance', 'Industrial Age', 'Modern Age', 'Space Age', 'Interstellar Age'];
+const AGE_YEARS = [0.03, 0.016, 0.012, 0.01, 0.008, 0.005, 0.0025, 0.0015, 0.001, 0.001]; // world years per 10 s tick
+const URBAN = [0.25, 0.3, 0.35, 0.4, 0.4, 0.45, 0.6, 0.75, 0.8, 0.85];
+const TIERS = ['Camp', 'Village', 'Town', 'City', 'Metropolis'];
+// real days a leading people spends on each discovery: Stone Age about 3 weeks, Space Age after about 6 months
+const TECH_DAYS = [0.3, 0.7, 1, 1.5, 2, 2.5, 3, 3, 3, 3, 5, 6, 7, 12, 8, 8, 9, 20, 8, 8, 8, 9, 6, 6, 6, 6, 6, 5, 5, 5, 7, 10, 10, 12, 13];
+let TECH_SCALE = 1.4;
+function techCost(k) { return TECH_DAYS[Math.min(k, TECH_DAYS.length - 1)] * 8640 * 1.55 * (1 + 0.012 * k) * TECH_SCALE; }
+const AGE_OF = []; { let a = 0; for (let k = 0; k <= TECHS.length; k++) { AGE_OF[k] = a; if (k < TECHS.length && TECHS[k][2] === 'age') a++; } }
+function ageOf(t) { return AGE_OF[Math.min(t, TECHS.length)]; }
+const FLAG_AT = {}; TECHS.forEach((t, k) => { if (t[2]) FLAG_AT[t[2]] = k; });
+function knows(c, flag) { return c.tech > FLAG_AT[flag]; }
+
+let S = null, STAMP = 0;
+const height = new Uint8Array(N), moist = new Uint8Array(N), sp = new Uint16Array(N), own = new Uint16Array(N);
+const temp = new Float32Array(N), fert = new Float32Array(N), biome = new Uint8Array(N), water = new Uint8Array(N);
+const NB = new Int32Array(N * 8);
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const i = y * W + x; let k = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if (!dx && !dy) continue;
+    const yy = Math.min(H - 1, Math.max(0, y + dy)), xx = (x + dx + W) % W;
+    NB[i * 8 + k++] = yy * W + xx;
+  }
+}
+const R = Math.random;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const pick = a => a[(R() * a.length) | 0];
+function gauss() { return (R() + R() + R() - 1.5) * 1.15; }
+const fastF = () => S.fast || 1;
+
+// ---------- map generation (noise sampled on the sphere so the globe has no seam) ----------
+function mkRng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function noise3(rng) {
+  const P = new Uint8Array(512), G = new Float32Array(256 * 3);
+  const p = Array.from({ length: 256 }, (_, i) => i); for (let i = 255; i > 0; i--) { const j = (rng() * (i + 1)) | 0; [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 512; i++) P[i] = p[i & 255];
+  for (let i = 0; i < 256; i++) { let x, y, z, l; do { x = rng() * 2 - 1; y = rng() * 2 - 1; z = rng() * 2 - 1; l = x * x + y * y + z * z; } while (l > 1 || l < 0.01); l = Math.sqrt(l); G[i * 3] = x / l; G[i * 3 + 1] = y / l; G[i * 3 + 2] = z / l; }
+  const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+  return function (x, y, z) {
+    const X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z), fx = x - X, fy = y - Y, fz = z - Z;
+    const u = fade(fx), v = fade(fy), w = fade(fz); let out = 0;
+    for (let c = 0; c < 8; c++) {
+      const dx = c & 1, dy = (c >> 1) & 1, dz = (c >> 2) & 1;
+      const g = P[P[P[(X + dx) & 255] + ((Y + dy) & 255)] + ((Z + dz) & 255)] * 3;
+      const d = G[g] * (fx - dx) + G[g + 1] * (fy - dy) + G[g + 2] * (fz - dz);
+      out += d * (dx ? u : 1 - u) * (dy ? v : 1 - v) * (dz ? w : 1 - w);
+    }
+    return out;
+  };
+}
+function sphere(i) { const x = i % W, y = (i / W) | 0; const lon = ((x + 0.5) / W - 0.5) * 2 * Math.PI, lat = (0.5 - (y + 0.5) / H) * Math.PI; return [Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon)]; }
+function genTerrain(seed) {
+  const rng = mkRng(seed), n1 = noise3(rng), n2 = noise3(rng);
+  const h = new Float32Array(N), m = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const [x, y, z] = sphere(i); let a = 0, amp = 1, f = 1.4;
+    for (let o = 0; o < 5; o++) { a += n1(x * f + 7, y * f + 3, z * f + 11) * amp; amp *= 0.5; f *= 2.05; }
+    let b = 0; amp = 1; f = 1.8; for (let o = 0; o < 4; o++) { b += n2(x * f, y * f, z * f) * amp; amp *= 0.5; f *= 2; }
+    h[i] = a - Math.pow(Math.abs(y), 4) * 0.25; m[i] = b;
+  }
+  const hs = Array.from(h).sort((a, b) => a - b), p = hs[Math.floor(N * 0.62)], lo = hs[0], hi = hs[N - 1];
+  const ms = Array.from(m).sort((a, b) => a - b), mlo = ms[(N * 0.02) | 0], mhi = ms[(N * 0.98) | 0];
+  for (let i = 0; i < N; i++) {
+    const v = h[i] < p ? (h[i] - lo) / (p - lo) * SEA : SEA + 1 + Math.pow((h[i] - p) / (hi - p), 0.8) * (254 - SEA);
+    height[i] = clamp(Math.round(v), 0, 255);
+    moist[i] = clamp(Math.round((m[i] - mlo) / (mhi - mlo) * 255), 0, 255);
+  }
+}
+function computeTile(i) {
+  const h = height[i], y = (i / W) | 0, lat = Math.abs((y + 0.5) / H * 2 - 1);
+  const elev = h > SEA ? (h - SEA) / (255 - SEA) : 0;
+  const t = clamp(1.04 - Math.pow(lat, 1.4) * 1.02 - elev * 0.7 + S.gt - S.winter, 0, 1);
+  temp[i] = t;
+  let b;
+  if (h <= SEA) { water[i] = 1; b = t < 0.1 ? BIO.ICE : (h < SEA - 26 ? BIO.DEEP : BIO.SEA); }
+  else {
+    water[i] = 0; const mm = moist[i] / 255;
+    if (elev > 0.6) b = t < 0.22 ? BIO.SNOW : BIO.MOUNT;
+    else if (t < 0.1) b = BIO.SNOW;
+    else if (t < 0.26) b = BIO.TUNDRA;
+    else if (elev < 0.035) b = BIO.COAST;
+    else if (mm < 0.3) b = BIO.DESERT;
+    else if (mm < 0.5) b = BIO.GRASS;
+    else if (mm < 0.74 || t < 0.6) b = BIO.FOREST;
+    else b = BIO.JUNGLE;
+  }
+  biome[i] = b;
+  fert[i] = BIOME[b].f * (water[i] ? 1 : (0.75 + 0.5 * moist[i] / 255)) * (0.55 + 0.45 * Math.min(1, t * 1.6));
+}
+function computeAll() { for (let i = 0; i < N; i++) computeTile(i); S._tempKey = S.gt - S.winter; }
+
+// ---------- names ----------
+const SYL = ['ka', 'ru', 'mo', 'ten', 'vel', 'ar', 'os', 'lu', 'pha', 'xi', 'dor', 'en', 'sil', 'tra', 'qu', 'ne', 'bo', 'rha', 'cy', 'mel', 'zo', 'il', 'gar', 'pe', 'tho', 'an', 'ul', 'ves', 'nyr', 'ko', 'sa', 'mi', 'tal', 'ash', 'ere', 'iun'];
+const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+function genus() { let s = pick(SYL) + pick(SYL); if (R() < 0.5) s += pick(['us', 'a', 'on', 'is', 'ax', 'ia']); return cap1(s); }
+function epithet(s) {
+  const o = [];
+  if (s.iq >= 6) o.push('sapiens', 'sagax'); else if (s.iq >= 3.5) o.push('callidus', 'astutus');
+  if (s.hab === 0) o.push('marinus', 'pelagicus', 'abyssalis'); else if (s.hab === 1) o.push('litoralis', 'amphibius'); else o.push('terrestris', 'campestris', 'silvestris');
+  if (s.size >= 8) o.push('gigas', 'magnus'); else if (s.size <= 2) o.push('minimus', 'parvus');
+  if (s.diet) o.push('rapax', 'carnivorus', 'venator'); else o.push('herbivorus', 'mitis');
+  if (s.heat > 0.72) o.push('calidus', 'tropicus'); else if (s.heat < 0.3) o.push('frigidus', 'borealis');
+  if (s.cx < 1.2) o.push('primus', 'simplex', 'protos');
+  return pick(o);
+}
+function word(syl, n) { let s = ''; for (let k = 0; k < n; k++) s += pick(syl); return cap1(s.slice(0, 8)); }
+function peopleName() { return word(SYL, R() < 0.4 ? 3 : 2); }
+function cityName(c) {
+  for (let k = 0; k < 12; k++) { let s = pick(c.syl) + pick(c.syl); if (R() < 0.55 || k > 5) s += pick(['an', 'or', 'eth', 'is', 'ar', 'um', 'el', 'ia', 'grad', 'hold', 'port', 'mere', 'dun', 'vale']); s = cap1(s); if (s !== c.name && !(S.cities || []).some(x => x.name === s)) return s; }
+  return cap1(pick(c.syl) + pick(c.syl) + pick(SYL)) + ' ' + pick(['Ford', 'Hill', 'Bay', 'Cross']);
+}
+
+// ---------- state & log ----------
+function newWorld(seed, name, now) {
+  S = {
+    v: 2, seed, name, created: now, savedAt: now, tick: 0, years: 0, civYear: 0, gt: 0, winter: 0, spSeq: 1, culSeq: 1,
+    species: {}, cultures: {}, cities: [], wars: [], boosts: [], fx: [], log: [], firsts: {}, fossils: [], wonders: [], ages: [],
+    stats: { born: 0, extinct: 0, awakenings: 0, actions: 0 }, energy: 60, energyAt: now, lastAwake: -99999, fast: 1,
+  };
+  genTerrain(seed); sp.fill(0); own.fill(0); computeAll();
+  let best = -1, bs = -1;
+  for (let k = 0; k < 5000; k++) { const i = (R() * N) | 0; if (biome[i] === BIO.SEA) { const sc = temp[i] + R() * 0.2; if (sc > bs) { bs = sc; best = i; } } }
+  if (best < 0) best = (R() * N) | 0;
+  const s = mkSpecies(null, { hab: 0, heat: temp[best], size: 1, diet: 0, cx: 0, iq: 0, hue: 160 });
+  s.name = 'Protocella primus';
+  for (let k = 0; k < 8; k++) { const j = NB[best * 8 + k]; if (water[j]) setSp(j, s.id); }
+  setSp(best, s.id);
+  addLog('life', 'The first living cells stirred in the warm shallows. ' + s.name + ' is born.');
+  return S;
+}
+const MINOR = { peace: 1, city: 1, life: 1, nature: 1, death: 1, war: 1, culture: 1 };
+function addLog(kind, text, at) {
+  S.log.push({ k: kind, t: S.tick, d: dateLabel(), x: text, at: at || STAMP || Date.now() });
+  if (S.log.length > 280) {
+    // trim the oldest minor entries first so discoveries, ages and your own actions survive longest
+    let drop = S.log.length - 250;
+    S.log = S.log.filter((l, idx) => { if (drop > 0 && idx < S.log.length - 120 && MINOR[l.k]) { drop--; return false; } return true; });
+    if (S.log.length > 280) S.log.splice(0, S.log.length - 280);
+  }
+}
+
+// ---------- species ----------
+function mkSpecies(parent, tr) {
+  let id = S.spSeq;
+  for (let g = 0; g < 70000; g++) { if (id >= 65000) id = 1; if (!S.species[id]) break; id++; }
+  S.spSeq = id + 1;
+  const s = { id, parent: parent ? parent.id : 0, born: S.tick, tiles: 0, peak: 0, gen: parent ? parent.gen + 1 : 0, est: 0, ...tr };
+  s.genus = parent && R() < 0.82 && Math.abs(parent.cx - s.cx) < 2 ? parent.genus : genus();
+  s.name = s.genus + ' ' + epithet(s);
+  S.species[id] = s; S.stats.born++; S.spCount = (S.spCount || 0) + 1;
+  return s;
+}
+function setSp(i, id) {
+  const o = sp[i]; if (o === id) return;
+  sp[i] = id;
+  if (o) { const s = S.species[o]; if (s && --s.tiles <= 0) extinct(s); }
+  if (id) { const s = S.species[id]; s.tiles++; if (s.tiles > s.peak) s.peak = s.tiles; if (!s.est && s.tiles >= 12) { s.est = 1; established(s); } }
+}
+function extinct(s) {
+  delete S.species[s.id]; S.stats.extinct++; S.spCount--;
+  if (s.peak >= 150 || s.awoke) {
+    S.fossils.push({ name: s.name, hue: s.hue, born: s.born, died: S.tick, peak: s.peak, hab: s.hab, size: s.size, diet: s.diet, cx: s.cx, iq: s.iq });
+    if (S.fossils.length > 30) S.fossils.shift();
+    if (s.peak >= 400) addLog('death', 'Once widespread, ' + s.name + ' has gone extinct.');
+  }
+}
+function first(key, text, kind) { if (S.firsts[key]) return; S.firsts[key] = S.tick; addLog(kind || 'life', text); }
+function established(s) {
+  if (s.cx >= 2) first('multi', 'Cells began to cooperate. ' + s.name + ' is the first many-celled creature.');
+  if (s.diet) first('pred', 'The first hunter appeared. ' + s.name + ' feeds on other life.');
+  if (s.hab === 1) first('shore', s.name + ' crawled into the shallows and tidal flats, the first life at the water’s edge.');
+  if (s.hab === 2) first('land', 'Life conquered the land. ' + s.name + ' walks where no creature walked before.', 'big');
+  if (s.size >= 8 && s.cx >= 3) first('giant', 'Giants roam the world. ' + s.name + ' is the largest creature yet.');
+  if (s.iq >= 3.5 && s.hab > 0) first('clever', s.name + ' shows signs of curiosity, solving simple problems.');
+  if (s.iq >= 5.2 && s.hab === 2) first('tools', 'Apes of the species ' + s.name + ' were seen cracking nuts with stones.');
+}
+function habitable(s, i) {
+  if (s.hab === 0) return water[i] === 1;
+  if (s.hab === 2) return water[i] === 0;
+  return biome[i] !== BIO.DEEP;
+}
+function fitness(s, i) {
+  if (!habitable(s, i)) return 0;
+  let f = 1 - Math.min(1, Math.abs(s.heat - temp[i]) * 2.4);
+  if (f <= 0) return 0;
+  let food = fert[i];
+  if (s.hab === 1 && !water[i] && biome[i] !== BIO.COAST) food *= 0.55;
+  if (s.diet) {
+    let prey = 0;
+    for (let k = 0; k < 8; k += 2) { const o = sp[NB[i * 8 + k]]; if (o && o !== s.id) { const q = S.species[o]; if (q && q.size <= s.size + 1) prey++; } }
+    food = food * 0.45 + prey * 0.22;
+  }
+  const need = 0.07 * s.size;
+  if (food < need) f *= food / need;
+  return f * (0.35 + food);
+}
+function power(s, i) { return fitness(s, i) * (1 + s.size * 0.035) * (1 + s.cx * 0.07) * (1 + s.iq * (s.hab === 2 ? 0.13 : 0.05)); }
+function boostAt(i) {
+  if (!S.boosts.length) return null;
+  let m = 1, iq = 0;
+  const x = i % W, y = (i / W) | 0;
+  for (const b of S.boosts) { let dx = Math.abs(x - b.x); dx = Math.min(dx, W - dx); const dy = y - b.y; if (dx * dx + dy * dy <= b.r * b.r) { if (b.t === 'spark') m *= 10; if (b.t === 'monolith') { m *= 3; iq += 0.5; } } }
+  return m === 1 && !iq ? null : { m, iq };
+}
+function mutate(p, i, b) {
+  const t = { hab: p.hab, heat: clamp(p.heat + gauss() * 0.07, 0, 1), size: p.size, diet: p.diet, cx: p.cx, iq: p.iq, hue: (p.hue + gauss() * 14 + 360) % 360 };
+  if (R() < 0.3) t.size = clamp(p.size + (R() < 0.5 ? -1 : 1), 1, 10);
+  if (R() < 0.05 && p.cx >= 1) t.diet = 1 - p.diet;
+  t.cx = clamp(p.cx + (R() - 0.28) * 0.9, 0, 10);
+  if (R() < 0.6) t.iq = clamp(p.iq + (R() - 0.34 + (p.hab === 2 ? 0.26 : 0) + (b ? b.iq : 0)) * (p.hab === 2 ? 1.2 : 0.75), 0, Math.min(10, t.cx * 1.15 + 0.3));
+  if (b && b.iq) t.cx = clamp(t.cx + 0.2, 0, 10);
+  if (p.hab === 0 && t.cx >= 2.4 && R() < 0.14) t.hab = 1;
+  else if (p.hab === 1 && t.cx >= 3.4 && R() < 0.14) t.hab = 2;
+  else if (p.hab === 1 && R() < 0.04) t.hab = 0;
+  else if (p.hab === 2 && R() < 0.02) t.hab = 1;
+  if (t.hab !== p.hab) t.hue = (t.hue + 40 + R() * 40) % 360;
+  return mkSpecies(p, t);
+}
+const MUT = 0.022;
+function lifeStep(K) {
+  const cnt = S.spCount || 1; S.spCap = cnt > 280 ? Math.pow(280 / cnt, 4) : 1;
+  const mf = Math.min(fastF(), 4);
+  for (let n = 0; n < K; n++) {
+    let i = (R() * N) | 0, id = sp[i];
+    if (!id) { i = (R() * N) | 0; id = sp[i]; if (!id) { i = (R() * N) | 0; id = sp[i]; if (!id) continue; } }
+    const s = S.species[id];
+    if (!s) { sp[i] = 0; continue; }
+    const f = fitness(s, i);
+    if (f < 0.1) { if (R() < 0.5) setSp(i, 0); continue; }
+    const b = boostAt(i);
+    if (R() < MUT * mf * (b ? b.m : 1) * (S.radiation > 0 ? 3 : 1) * S.spCap) { const c = mutate(s, i, b); setSp(i, c.id); continue; }
+    const j = NB[i * 8 + ((R() * 8) | 0)], o = sp[j];
+    if (o === id || !habitable(s, j)) continue;
+    if (!o) { if (fitness(s, j) > 0.12) setSp(j, id); }
+    else {
+      const q = S.species[o];
+      if (!q) { setSp(j, id); continue; }
+      if (power(s, j) * (0.8 + R() * 0.4) > power(q, j)) setSp(j, id);
+    }
+  }
+}
+
+// ---------- peoples ----------
+function mkCulture(spId, at, parent) {
+  const id = S.culSeq++;
+  const syl = parent ? parent.syl.slice(0, 3).concat([pick(SYL), pick(SYL), pick(SYL)]) : [pick(SYL), pick(SYL), pick(SYL), pick(SYL), pick(SYL), pick(SYL)];
+  const c = {
+    id, name: word(syl, R() < 0.4 ? 3 : 2), sp: spId, born: S.tick, pop: parent ? 0 : 30, tech: parent ? parent.tech : 0, rp: 0, tiles: 0, fs: 0,
+    hue: freeHue(), syl,
+    aggr: clamp((parent ? parent.aggr : R()) + gauss() * 0.25, 0.05, 1), faith: parent ? parent.faith * 0.5 : R() * 0.3,
+    curio: clamp((parent ? parent.curio : R()) + gauss() * 0.2, 0.05, 1), nb: [], capMult: 1, gov: '', wonders: 0,
+    bornAt: STAMP || Date.now(), wars: 0, golden: 0, dark: 0, sick: 0, peak: 0, geniuses: 0,
+  };
+  c.faithName = word(syl, 2) + pick(['ism', 'ar', 'a', 'ian way']);
+  for (let k = 0; k < c.tech; k++) c.capMult *= TECHS[k][1];
+  c.gov = govOf(c);
+  S.cultures[id] = c;
+  return c;
+}
+// pick the colour farthest from every living nation, so neighbours never look alike
+function freeHue() {
+  const used = Object.values(S.cultures).map(c => c.hue); let best = (R() * 360) | 0, bd = -1;
+  for (let k = 0; k < 24; k++) { const h = (k * 15 + R() * 10) % 360; let d = 999; for (const u of used) { const x = Math.abs(h - u); d = Math.min(d, Math.min(x, 360 - x)); } if (d > bd) { bd = d; best = Math.round(h); } }
+  return best;
+}
+function govOf(c) {
+  const a = ageOf(c.tech), n = c.cities || 0;
+  if (a === 0) return n >= 4 ? 'Chiefdom' : 'Tribe';
+  if (a <= 4) return n >= 14 ? 'Empire' : 'Kingdom';
+  if (a === 5) return n >= 14 ? 'Empire' : (c.aggr > 0.6 ? 'Kingdom' : 'Republic');
+  return n >= 18 ? (c.aggr > 0.55 ? 'Empire' : 'Federation') : 'Republic';
+}
+function nation(c) {
+  if (!c) return 'a lost people';
+  const g = c.gov || 'Tribe';
+  if (g === 'Tribe') return 'the ' + c.name + ' tribes';
+  if (g === 'Chiefdom') return 'the ' + c.name + ' chiefdom';
+  return 'the ' + g + ' of ' + c.name;
+}
+const Nation = c => cap1(nation(c));
+function updateGov(c) {
+  const g = govOf(c); if (g === c.gov) return;
+  const old = c.gov; c.gov = g;
+  let t;
+  if (g === 'Chiefdom') t = 'The ' + c.name + ' tribes united under a single chief.';
+  else if (g === 'Kingdom' && (old === 'Tribe' || old === 'Chiefdom')) t = 'The ' + c.name + ' crowned their first king. ' + Nation(c) + ' is born.';
+  else if (g === 'Empire') t = 'The ' + c.name + ' now rule so many cities that they call their land an empire: ' + nation(c) + '.';
+  else if (g === 'Republic') t = 'The ' + c.name + ' replaced their rulers with elected leaders and founded ' + nation(c) + '.';
+  else if (g === 'Federation') t = 'The provinces of the ' + c.name + ' joined as equals in ' + nation(c) + '.';
+  else t = 'The ' + c.name + ' are now ' + nation(c) + '.';
+  addLog('nation', t);
+}
+function claim(i, cid) {
+  const o = own[i]; if (o === cid) return;
+  if (o) { const d = S.cultures[o]; if (d) { const share = d.tiles > 0 ? d.pop / d.tiles : 0; d.pop -= share; d.tiles--; d.fs -= fert[i]; if (cid && S.cultures[cid]) S.cultures[cid].pop += share * 0.6; } }
+  own[i] = cid;
+  if (cid) { const c = S.cultures[cid]; c.tiles++; c.fs += fert[i]; }
+}
+function capOf(c) { return Math.max(30, c.fs * 60 * c.capMult); }
+function cityAt(i) { for (const ct of S.cities) if (ct.i === i) return ct; return null; }
+function distW(a, b) { const ax = a % W, ay = (a / W) | 0, bx = b % W, by = (b / W) | 0; let dx = Math.abs(ax - bx); dx = Math.min(dx, W - dx); return Math.hypot(dx, ay - by); }
+function foundCity(c, i, capital) {
+  const ct = { i, name: cityName(c), cul: c.id, born: S.tick, cap: capital ? 1 : 0, w: capital ? 3 : 1, tier: 0, bornAt: STAMP || Date.now() };
+  S.cities.push(ct);
+  c.cities = (c.cities || 0) + 1;
+  return ct;
+}
+function popOf(ct) { const c = S.cultures[ct.cul]; if (!c || !c.wsum) return 0; return c.pop * URBAN[ageOf(c.tech)] * ct.w / c.wsum; }
+function tierOf(p) { return p < 300 ? 0 : p < 3000 ? 1 : p < 30000 ? 2 : p < 500000 ? 3 : 4; }
+function capitalOf(c) { return S.cities.find(x => x.cul === c.id && x.cap) || S.cities.find(x => x.cul === c.id); }
+function awaken(s) {
+  const cand = [];
+  for (let i = 0; i < N; i++) if (sp[i] === s.id && !own[i]) cand.push(i);
+  if (!cand.length) return;
+  const at = cand.sort((a, b) => fert[b] - fert[a])[Math.min(cand.length - 1, (R() * 3) | 0)];
+  s.awoke = 1; S.lastAwake = S.tick; S.stats.awakenings++;
+  if (!/sapiens/.test(s.name)) s.name = s.genus + ' sapiens';
+  const c = mkCulture(s.id, at, null);
+  claim(at, c.id); for (let k = 0; k < 8; k++) { const j = NB[at * 8 + k]; if (!water[j]) claim(j, c.id); }
+  const ct = foundCity(c, at, true);
+  if (S.civStart == null) {
+    S.civStart = S.tick;
+    S.ages.push({ a: 0, at: STAMP || Date.now(), y: 0, by: c.name });
+    addLog('big', 'A mind awakens. A troop of clever apes, ' + s.name + ', gathered around a fire and spoke the first words. They call themselves the ' + c.name + ', and their first camp is ' + ct.name + '.');
+  } else addLog('big', 'Far away, another band of ' + s.name + ' learned to speak. They call themselves the ' + c.name + '.');
+}
+const WONDERS = [
+  ['Stone Circle', 'Painted Caves', 'Totem Hill'], ['Great Ziggurat', 'Bronze Colossus', 'Hanging Gardens'], ['Great Wall', 'Iron Pillar', 'Royal Road'],
+  ['Grand Library', 'Great Lighthouse', 'Amphitheatre'], ['Great Cathedral', 'Castle of Kings', 'Sky Temple'], ['Grand Observatory', 'Painted Dome', 'Royal Academy'],
+  ['Iron Bridge', 'Grand Canal', 'Crystal Palace'], ['Tallest Tower', 'Great Dam', 'World Stadium'], ['Launch Spire', 'Orbital Ring', 'Moon Base'], ['Star Gate', 'Dyson Mirror'],
+];
+function buildWonder(c) {
+  const cap = capitalOf(c); if (!cap) return;
+  const a = ageOf(c.tech), list = WONDERS[a].filter(n => !S.wonders.some(w => w.base === n && w.cul === c.id));
+  if (!list.length) return;
+  const base = pick(list), nm = base + ' of ' + cap.name;
+  S.wonders.push({ i: cap.i, n: nm, base, cul: c.id, a, at: STAMP || Date.now(), y: Math.floor(S.civYear) });
+  if (S.wonders.length > 60) S.wonders.shift();
+  c.wonders = (c.wonders || 0) + 1;
+  addLog('wonder', Nation(c) + ' built the ' + nm + '.');
+}
+const CULT = [
+  ['{C} painted hunting scenes on cave walls near {city}.', '{C} began burying their dead with flowers and beads.', 'Storytellers of {C} told the first tales of the stars.', '{C} tamed wild dogs that now follow their hunters.', 'The people of {city} carved flutes from bird bones and made the first music.'],
+  ['{C} wrote down their first laws in {city}.', 'Merchants from {city} began trading copper with {D}.', 'Priests of {C} built a temple to the {faith}.', '{C} held a great harvest festival in {city}.'],
+  ['Smiths of {city} forged the first iron swords.', '{C} built a road linking {city} to the coast.', 'Poets of {C} composed the Song of {hero}.', 'The {faith} spread through the villages of {C}.'],
+  ['Philosophers of {city} argued about the shape of the world.', '{C} held the first great games at {city}.', 'Engineers of {C} built aqueducts to carry water to {city}.', 'Astronomers of {C} predicted an eclipse.'],
+  ['Monks of {C} copied ancient books by candlelight.', 'Knights of {C} rode out to defend {city}.', 'A university opened in {city}.', 'The faith of the {faith} became the heart of {C}.'],
+  ['Painters of {city} started a new school of art.', 'Explorers of {C} mapped distant coasts.', 'Printers of {city} spread pamphlets across the land.', 'The first banks opened in {city}.'],
+  ['The first factory opened in {city}.', 'A railway now links {city} with the rest of {C}.', 'Workers of {C} won the right to vote.', 'Gas lamps lit the streets of {city} for the first time.'],
+  ['{C} broadcast music across the world by radio.', 'Scientists of {C} split the atom.', 'The first airport opened near {city}.', 'Doctors of {C} wiped out an old disease.'],
+  ['{C} landed explorers on the moon.', 'A space station built by {C} now circles the world.', 'Children in {city} talk to friends on the other side of the planet.', '{C} lit the first fusion reactor near {city}.'],
+  ['{C} sent a probe to another star.', 'Colonists of {C} settled the red planet.'],
+];
+function cultureEvent(c) {
+  const mine = S.cities.filter(x => x.cul === c.id); if (!mine.length) return;
+  const a = ageOf(c.tech), d = c.nb.length ? S.cultures[pick(c.nb)] : null;
+  let t = pick(CULT[a]);
+  if (t.includes('{D}') && !d) return;
+  t = t.replace('{C}', 'the ' + c.name).replace('{city}', pick(mine).name).replace('{D}', d ? 'the ' + d.name : '').replace('{hero}', word(c.syl, 2)).replace('{faith}', c.faithName);
+  addLog('culture', cap1(t));
+}
+function techUp(c) {
+  const k = c.tech, before = ageOf(k);
+  c.tech++; c.capMult *= TECHS[k][1];
+  const nm = TECHS[k][0];
+  if (!S.firsts['t' + k]) { S.firsts['t' + k] = S.tick; addLog('tech', 'The ' + c.name + ' were the first to discover ' + nm.toLowerCase() + '.'); }
+  const after = ageOf(c.tech);
+  if (after > before) {
+    if (!S.firsts['age' + after]) { S.firsts['age' + after] = S.tick; S.ages.push({ a: after, at: STAMP || Date.now(), y: Math.floor(S.civYear), by: c.name }); addLog('big', 'The ' + c.name + ' led the world into the ' + AGES[after] + '.'); }
+    if (R() < 0.55) buildWonder(c);
+  }
+  if (k === TECHS.length - 1) addLog('big', 'The ' + c.name + ' launched a starship toward another sun. Your world has reached the stars.');
+  updateGov(c);
+}
+// what speeds a people up or slows it down: wars, plague, golden and dark ages, peaceful trade with neighbours
+function paceOf(c) {
+  let peace = 0; for (const id of c.nb) { const d = S.cultures[id]; if (d && c.war !== id) peace++; }
+  return (c.war ? 0.7 : 1) * (c.golden ? 1.6 : 1) * (c.dark ? 0.5 : 1) * (c.sick ? 0.7 : 1) * (1 + 0.06 * Math.min(peace, 3));
+}
+function paceNotes(c) {
+  const o = [];
+  if (c.golden) o.push(['Golden age', '+60%', 1]); if (c.dark) o.push(['Dark age', '\u221250%', 0]);
+  if (c.war) o.push(['At war', '\u221230%', 0]); if (c.sick) o.push(['Plague', '\u221230%', 0]);
+  let peace = 0; for (const id of c.nb) { const d = S.cultures[id]; if (d && c.war !== id) peace++; }
+  if (peace) o.push(['Trade with ' + Math.min(peace, 3) + (peace > 1 ? ' neighbours' : ' neighbour'), '+' + 6 * Math.min(peace, 3) + '%', 1]);
+  return o;
+}
+const DAY_T = 8640;
+function cultureMoods(c, pf, f) {
+  const T = S.tick, dur = d => Math.round(d * DAY_T / Math.min(f, 6));
+  if (c.golden && T > c.golden) { c.golden = 0; addLog('nation', 'The golden age of ' + nation(c) + ' came to an end.'); }
+  if (c.dark && T > c.dark) { c.dark = 0; addLog('nation', Nation(c) + ' recovered from its dark age.'); }
+  if (c.sick && T > c.sick) c.sick = 0;
+  if (c.tech >= 2 && !c.golden && !c.dark && R() < 0.0000075 * pf * (1 + c.faith) * (c.war ? 0.3 : 1.2)) {
+    c.golden = T + dur(3 + R() * 7);
+    addLog('nation', Nation(c) + ' entered a golden age. Trade, art and learning flourish' + (S.cities.some(x => x.cul === c.id && x.cap) ? ' in ' + capitalOf(c).name : '') + '.');
+  }
+  if (c.tech >= 4 && !c.golden && !c.dark && R() < 0.000005 * pf * (c.war ? 3 : 1) * (c.sick ? 3 : 1) * (c.tiles > 250 ? 2 : 1)) {
+    c.dark = T + dur(4 + R() * 8);
+    addLog('death', Nation(c) + ' fell into a dark age. ' + pick(['Old knowledge is being forgotten.', 'Its rulers quarrel and its roads fall silent.', 'Famine and unrest spread through its villages.']));
+  }
+  if (c.tech >= 5 && c.tech < TECHS.length && R() < 0.000004 * pf * (c.golden ? 4 : 1) * (0.5 + c.curio)) {
+    const mine = S.cities.filter(x => x.cul === c.id); if (mine.length) {
+      c.rp += techCost(c.tech) * 0.35; c.geniuses = (c.geniuses || 0) + 1;
+      addLog('tech', 'A genius named ' + word(c.syl, 2) + ' ' + word(c.syl, 2) + ' was born in ' + pick(mine).name + '. Their ideas pushed the ' + c.name + ' closer to ' + TECHS[c.tech][0].toLowerCase() + '.');
+    }
+  }
+}
+function civCulture(c) {
+  const f = fastF(), cap = capOf(c);
+  cultureMoods(c, Math.min(f, 8), f);
+  const g = Math.min(0.5, 0.004 * (1 + c.faith * 0.3) * (c.golden ? 1.5 : 1) * (c.dark ? 0.5 : 1) * f);
+  c.pop += c.pop * g * (1 - c.pop / cap);
+  if (c.pop < 5) c.pop = 5;
+  if (c.pop > (c.peak || 0)) c.peak = c.pop;
+  if (c.tech < TECHS.length) {
+    let lead = 0; for (const id of c.nb) { const d = S.cultures[id]; if (d && d.tech > c.tech) lead++; }
+    const cities = c.cities || 1;
+    const rate = (0.6 + c.curio) * (1 + 0.02 * Math.min(cities, 25)) * (1 + 0.25 * Math.min(lead, 2)) * (0.5 + 0.5 * Math.min(1, c.pop / capOf(c))) * paceOf(c);
+    c.rp += rate * f; c.lastRate = rate;
+    let guard = 0;
+    while (c.tech < TECHS.length && c.rp >= techCost(c.tech) && guard++ < 4) { c.rp -= techCost(c.tech); techUp(c); }
+  }
+  const pf = Math.min(f, 8);
+  // new camps and villages
+  const n = c.cities || 0;
+  if (c.tiles > 7 * (n + 1) && S.cities.length < 480 && R() < 0.012 * pf) {
+    const mine = S.cities.filter(x => x.cul === c.id);
+    if (mine.length) {
+      let i = pick(mine).i;
+      for (let st = 0; st < 14; st++) { const j = NB[i * 8 + ((R() * 8) | 0)]; if (own[j] === c.id && !water[j]) i = j; }
+      if (fert[i] > 0.12 && mine.every(m => distW(m.i, i) >= 3.2) && S.cities.every(m => distW(m.i, i) >= 2.2)) {
+        const ct = foundCity(c, i, false);
+        if (n < 4 || R() < 0.04) addLog('city', 'The ' + c.name + ' founded a new ' + (ageOf(c.tech) ? 'village' : 'camp') + ' at ' + ct.name + '.');
+      }
+    }
+  }
+  if (c.tech >= 3 && R() < 0.00012 * pf) cultureEvent(c);
+  if ((c.cities || 0) >= 3 && R() < 0.000004 * pf) buildWonder(c);
+  // wars
+  if (!c.war && c.nb.length && c.tech >= 3 && R() < 0.00003 * c.aggr * (1 - c.faith * 0.5) * pf) {
+    const d = S.cultures[pick(c.nb)];
+    if (d && !d.war) {
+      const w = { a: c.id, b: d.id, until: S.tick + Math.round((900 + R() * 4000) / Math.min(f, 6)) };
+      S.wars.push(w); c.war = d.id; d.war = c.id; c.wars = (c.wars || 0) + 1; d.wars = (d.wars || 0) + 1; S.stats.wars = (S.stats.wars || 0) + 1;
+      addLog('war', 'War broke out between ' + nation(c) + ' and ' + nation(d) + '.');
+    }
+  }
+  if ((c.cities || 0) >= 3 && R() < 0.000006 * pf * (knows(c, 'elec') ? 0.2 : 1)) { c.pop *= 0.7; c.sick = S.tick + Math.round(2 * DAY_T / Math.min(f, 6)); addLog('death', 'A plague swept through the cities of the ' + c.name + '.'); }
+  if (c.tiles > 200 && (c.cities || 0) >= 6 && S._ncul < 16 && R() < 0.000012 * pf * (1 - c.faith * 0.8) * (c.dark ? 5 : 1)) secede(c);
+  if (c.tiles < 6 && S.tick - c.born > 4000 && c.nb.length && R() < 0.0005 * pf) absorb(c);
+}
+function absorb(c) {
+  let best = null; for (const id of c.nb) { const d = S.cultures[id]; if (d && d !== c && (!best || d.tiles > best.tiles)) best = d; }
+  if (!best) return;
+  for (let i = 0; i < N; i++) if (own[i] === c.id) claim(i, best.id);
+  for (const x of S.cities) if (x.cul === c.id) { x.cul = best.id; x.cap = 0; }
+  addLog('nation', 'The ' + c.name + ' joined ' + nation(best) + ' and became one people.');
+}
+function secede(c) {
+  const mine = S.cities.filter(x => x.cul === c.id && !x.cap);
+  if (!mine.length) return;
+  const ct = pick(mine), d = mkCulture(c.sp, ct.i, c);
+  const q = [ct.i], seen = new Set(q); let moved = 0;
+  while (q.length) {
+    const i = q.shift(); if (distW(i, ct.i) > 8) continue;
+    if (own[i] === c.id) { claim(i, d.id); moved++; }
+    for (let k = 0; k < 8; k++) { const j = NB[i * 8 + k]; if (!seen.has(j) && own[j] === c.id) { seen.add(j); q.push(j); } }
+  }
+  if (moved < 6) { for (let i = 0; i < N; i++) if (own[i] === d.id) claim(i, c.id); delete S.cultures[d.id]; return; }
+  const share = c.pop * moved / (c.tiles + moved); d.pop += share; c.pop -= share;
+  for (const x of S.cities) if (own[x.i] === d.id) { x.cul = d.id; x.cap = 0; }
+  ct.cap = 1; recount(); d.gov = govOf(d);
+  addLog('nation', 'The people of ' + ct.name + ' broke away from ' + nation(c) + ' and founded ' + nation(d) + '.');
+}
+function atWar(a, b) { const c = S.cultures[a]; return c && c.war === b; }
+function civStep() {
+  const cs = Object.values(S.cultures);
+  if (!cs.length) return;
+  S._ncul = cs.length;
+  const f = fastF(), pf = Math.min(f, 8);
+  for (const c of cs) civCulture(c);
+  for (let n = 0; n < K_CIV; n++) {
+    const i = (R() * N) | 0, cid = own[i]; if (!cid) continue;
+    const c = S.cultures[cid]; if (!c) { own[i] = 0; continue; }
+    const j = NB[i * 8 + ((R() * 8) | 0)], o = own[j];
+    const press = c.pop / capOf(c), age = ageOf(c.tech);
+    if (water[j]) {
+      if (water[i] === 0 && knows(c, 'sail') && R() < 0.015 * pf * (knows(c, 'nav') ? 3 : 1)) {
+        const dx = (j % W) - (i % W), dy = ((j / W) | 0) - ((i / W) | 0); let x = i % W, y = (i / W) | 0;
+        const reach = knows(c, 'nav') ? 22 : 7;
+        for (let st = 0; st < reach; st++) {
+          x = (x + dx + W) % W; y += dy; if (y < 0 || y >= H) break;
+          const k = y * W + x;
+          if (!water[k]) { if (!own[k] && fert[k] > 0.1) { claim(k, cid); if (R() < 0.6 && S.cities.every(m => distW(m.i, k) >= 2.2)) { const ct = foundCity(c, k, false); if (!S.firsts['sea' + cid]) { S.firsts['sea' + cid] = 1; addLog('city', 'Sailors of the ' + c.name + ' crossed the sea and founded ' + ct.name + ' on a far shore.'); } } } break; }
+        }
+      }
+      continue;
+    }
+    if (!o) {
+      if (R() < pf * (0.03 + 0.4 * press) * (0.12 + 0.14 * age) * (0.3 + fert[j])) claim(j, cid);
+    } else if (o !== cid) {
+      const d = S.cultures[o]; if (!d) { own[j] = 0; continue; }
+      if (c.nb.indexOf(o) < 0) { c.nb.push(o); if (c.nb.length > 8) c.nb.shift(); }
+      if (d.nb.indexOf(cid) < 0) { d.nb.push(cid); if (d.nb.length > 8) d.nb.shift(); }
+      if (atWar(cid, o)) {
+        const sa = Math.log10(c.pop + 10) * (1 + c.tech * 0.12) * (0.7 + c.aggr * 0.5), sb = Math.log10(d.pop + 10) * (1 + d.tech * 0.12) * (0.9 + d.faith * 0.3);
+        if (sa * (0.6 + R() * 0.8) > sb) {
+          claim(j, cid);
+          const ct = cityAt(j);
+          if (ct && ct.cul !== cid) {
+            const wasCap = ct.cap; ct.cul = cid; ct.cap = 0;
+            if (wasCap) { addLog('war', Nation(c) + ' captured ' + ct.name + ', the capital of the ' + d.name + '.'); const rest = S.cities.find(x => x.cul === d.id); if (rest) rest.cap = 1; if (!d.dark && R() < 0.5) { d.golden = 0; d.dark = S.tick + Math.round((3 + R() * 5) * DAY_T / Math.min(f, 6)); addLog('death', 'Losing its capital threw ' + nation(d) + ' into a dark age.'); } }
+          }
+        }
+      } else if (c.tech - d.tech >= 4 && R() < 0.01 * pf) claim(j, cid);
+    }
+  }
+  for (let k = S.wars.length - 1; k >= 0; k--) {
+    const w = S.wars[k], a = S.cultures[w.a], b = S.cultures[w.b];
+    if (!a || !b || S.tick > w.until) {
+      S.wars.splice(k, 1); if (a) a.war = 0; if (b) b.war = 0;
+      if (a && b) addLog('peace', nation(a) === nation(b) ? 'Peace returned.' : Nation(a) + ' and ' + nation(b) + ' signed a peace treaty.');
+    }
+  }
+  for (const c of cs) if (c.tiles <= 0) {
+    delete S.cultures[c.id]; S.cities = S.cities.filter(x => x.cul !== c.id);
+    addLog('death', 'The ' + c.name + ' vanished from history.');
+  }
+  for (const ct of S.cities) if (own[ct.i] !== ct.cul) { const n = own[ct.i]; if (n && S.cultures[n]) { ct.cul = n; ct.cap = 0; } else ct.dead = 1; }
+  if (S.cities.some(x => x.dead)) S.cities = S.cities.filter(x => !x.dead);
+}
+function settlements() {
+  // grow settlements and promote them from camp to village, town, city and metropolis
+  const f = fastF();
+  for (const c of Object.values(S.cultures)) { c.wsum = 0; c.cities = 0; }
+  for (const ct of S.cities) { const c = S.cultures[ct.cul]; if (!c) continue; ct.w += 0.004 * (0.4 + fert[ct.i]) * (ct.cap ? 2.5 : 1) * f; c.wsum += ct.w; c.cities++; }
+  for (const ct of S.cities) {
+    const c = S.cultures[ct.cul]; if (!c) continue;
+    const a = ageOf(c.tech), t = Math.min(tierOf(popOf(ct)), a === 0 ? (knows(c, 'farm') ? 2 : 1) : a < 6 ? 3 : 4);
+    if (t > ct.tier) {
+      ct.tier = t;
+      if (t >= 2 && !S.firsts['tier' + t]) { S.firsts['tier' + t] = S.tick; addLog('city', ct.name + ' of the ' + c.name + ' has grown into the world’s first ' + TIERS[t].toLowerCase() + '.'); }
+      else if (t >= 3 && ct.cap) addLog('city', ct.name + ', capital of ' + nation(c) + ', is now a ' + TIERS[t].toLowerCase() + '.');
+    } else if (t < ct.tier - 1) ct.tier = t + 1;
+  }
+  for (const c of Object.values(S.cultures)) updateGov(c);
+}
+function recount() {
+  for (const c of Object.values(S.cultures)) { c.tiles = 0; c.fs = 0; c.cities = 0; c.wsum = 0; }
+  for (let i = 0; i < N; i++) { const o = own[i]; if (o) { const c = S.cultures[o]; if (!c) { own[i] = 0; continue; } c.tiles++; c.fs += fert[i]; } }
+  for (const ct of S.cities) { const c = S.cultures[ct.cul]; if (c) { c.cities++; c.wsum += ct.w; } }
+  for (const c of Object.values(S.cultures)) if (!S.cities.some(x => x.cul === c.id && x.cap)) { const f = S.cities.find(x => x.cul === c.id); if (f) f.cap = 1; }
+}
+
+// ---------- world tick ----------
+function leadAge() { let a = -1; for (const c of Object.values(S.cultures)) a = Math.max(a, ageOf(c.tech)); return a; }
+function eraName() {
+  const a = leadAge(); if (a >= 0) return AGES[a];
+  if (S.firsts.tools) return 'Age of Apes';
+  if (S.firsts.clever) return 'Dawn of Minds';
+  if (S.firsts.land) return 'Life on Land';
+  if (S.firsts.multi) return 'Age of Many Cells';
+  return 'Primordial Seas';
+}
+function dateLabel() {
+  if (S.civStart != null) return 'Year ' + Math.floor(S.civYear + 1).toLocaleString('en-US');
+  const y = S.years; return (y >= 1e9 ? (y / 1e9).toFixed(2) + ' billion' : (y / 1e6).toFixed(1) + ' million') + ' years';
+}
+// ---------- statistics: a thinning time series that always fits in the save ----------
+const encP = p => p > 0 ? Math.round(Math.log10(p + 1) * 100) : 0, decP = v => v ? Math.pow(10, v / 100) - 1 : 0;
+function sample(at) {
+  const Z = S.ser || (S.ser = { iv: 60000, last: 0, t: [], y: [], pop: [], sp: [], set: [], nat: [], c: {}, nm: {} });
+  if (at - Z.last < Z.iv) return;
+  Z.last = at;
+  const cs = Object.values(S.cultures), n = Z.t.length;
+  Z.t.push(at); Z.y.push(S.civStart != null ? Math.floor(S.civYear + 1) : -Math.round(S.years / 1e5) / 10);
+  Z.pop.push(encP(cs.reduce((a, c) => a + c.pop, 0))); Z.sp.push(S.spCount || 0); Z.set.push(S.cities.length); Z.nat.push(cs.length);
+  for (const c of cs) { if (!Z.c[c.id]) Z.c[c.id] = new Array(n).fill(0); Z.c[c.id].push(encP(c.pop)); Z.nm[c.id] = [c.name, c.hue]; }
+  for (const id in Z.c) if (Z.c[id].length < n + 1) Z.c[id].push(0);
+  if (Z.t.length > 180) {
+    const half = a => a.filter((v, i) => i % 2 === 0 || i === a.length - 1);
+    for (const k of ['t', 'y', 'pop', 'sp', 'set', 'nat']) Z[k] = half(Z[k]);
+    for (const id in Z.c) Z.c[id] = half(Z.c[id]);
+    Z.iv *= 2;
+  }
+  const ids = Object.keys(Z.c);
+  if (ids.length > 24) { const dead = ids.filter(id => !S.cultures[id]).sort((a, b) => Math.max(...Z.c[a]) - Math.max(...Z.c[b])); for (const id of dead.slice(0, ids.length - 24)) { delete Z.c[id]; delete Z.nm[id]; } }
+}
+function tickMs() { return S.civStart != null ? TICK_CIV : TICK_LIFE; }
+function step() {
+  S.tick++;
+  const civ = S.civStart != null;
+  lifeStep(civ ? 120 : 600);
+  if (civ) {
+    const a = Math.max(0, leadAge()); S.civYear += AGE_YEARS[a] * fastF();
+    civStep();
+    if (S.tick % 300 === 0) recount();
+    if (S.tick % 6 === 0) settlements();
+  } else S.years += 60000 * fastF();
+  if (S.tick % 30 === 0) {
+    for (const s of Object.values(S.species)) if (s.hab === 2 && s.iq >= 5.8 && s.tiles >= 10 && !s.awoke && (S.civStart == null || S.tick - S.lastAwake > 20000) && S.stats.awakenings < 3) { awaken(s); break; }
+  }
+  if (S.winter > 0) S.winter = Math.max(0, S.winter - (civ ? 0.0012 : 0.00012) * fastF());
+  if (S.radiation > 0) S.radiation--;
+  if (Math.abs((S.gt - S.winter) - S._tempKey) > 0.008) { computeAll(); if (civ) recount(); }
+  for (let k = S.boosts.length - 1; k >= 0; k--) if ((S.boosts[k].ttl -= (civ ? 10 : 1)) <= 0) S.boosts.splice(k, 1);
+  for (let k = S.fx.length - 1; k >= 0; k--) if (--S.fx[k].ttl <= 0) S.fx.splice(k, 1);
+  if (!civ && R() < 1 / 40000 && S.tick > 3000) naturalMeteor((R() * N) | 0);
+  if (R() < (civ ? 1 / 60000 : 1 / 9000) * fastF()) { let i = (R() * N) | 0; for (let t = 0; t < 50 && water[i]; t++) i = (R() * N) | 0; if (!water[i]) volcano(i % W, (i / W) | 0, true); }
+  if (S.tick % 300 === 0) checkDominant();
+  if (S.tick % 5 === 0) sample(STAMP || Date.now());
+}
+function checkDominant() {
+  let best = null; for (const s of Object.values(S.species)) if (!best || s.tiles > best.tiles) best = s;
+  if (best && best.id !== S.domId && best.tiles > 300) { S.domId = best.id; if (S.civStart == null) addLog('life', best.name + ' is now the most widespread creature in the world.'); }
+}
+
+// ---------- powers ----------
+function area(x, y, r, fn) {
+  const rr = Math.ceil(r);
+  for (let dy = -rr; dy <= rr; dy++) {
+    const yy = y + dy; if (yy < 0 || yy >= H) continue;
+    // stretch east-west near the poles so the circle stays round on the globe
+    const sx = 1 / Math.max(0.25, Math.cos(((yy + 0.5) / H - 0.5) * Math.PI)), rx = Math.ceil(r * sx);
+    for (let dx = -rx; dx <= rx; dx++) {
+      const d = Math.hypot(dx / sx, dy); if (d > r) continue;
+      fn(yy * W + ((x + dx + W * 4) % W), d / r);
+    }
+  }
+}
+function retile(x, y, r) { area(x, y, r + 1, i => computeTile(i)); recount(); }
+function killPop(x, y, r, frac) {
+  const hit = {}; area(x, y, r, i => { if (own[i]) hit[own[i]] = (hit[own[i]] || 0) + 1; });
+  for (const id in hit) { const c = S.cultures[id]; if (c) c.pop *= 1 - frac * Math.min(1, hit[id] / Math.max(1, c.tiles)) * 2; }
+  return Object.keys(hit).map(id => S.cultures[id]).filter(Boolean);
+}
+function wipe(x, y, r) { let k = 0; area(x, y, r, i => { if (sp[i]) { setSp(i, 0); k++; } }); return k; }
+function naturalMeteor(i) { impact(i % W, (i / W) | 0, 5); addLog('death', 'A falling star struck the world. Dust darkened the sky.'); }
+function impact(x, y, r) {
+  wipe(x, y, r);
+  area(x, y, r, (i, d) => { if (own[i]) claim(i, 0); height[i] = clamp(height[i] + (d > 0.75 ? 14 : -26 * (1 - d)), 0, 255); });
+  S.cities = S.cities.filter(c => distW(c.i, y * W + x) > r);
+  S.winter = Math.min(0.3, S.winter + 0.16); S.radiation = 1600;
+  retile(x, y, r); computeAll();
+  let lost = 0;
+  for (let i = 0; i < N; i++) if (sp[i] && R() < 0.35) { const s = S.species[sp[i]]; if (s && fitness(s, i) < 0.25) { setSp(i, 0); lost++; } }
+  S.fx.push({ t: 'flash', x, y, ttl: 4, r, real: 1 });
+  return lost;
+}
+function volcano(x, y, natural) {
+  area(x, y, 2.5, (i, d) => { height[i] = clamp(height[i] + 30 * (1 - d) + 6, 0, 255); moist[i] = clamp(moist[i] + 20, 0, 255); if (d < 0.8 && sp[i]) setSp(i, 0); });
+  killPop(x, y, 3, 0.3);
+  retile(x, y, 3);
+  S.fx.push({ t: 'smoke', x, y, ttl: 30 });
+  if (natural && S.tick > 200) addLog('nature', 'A volcano erupted' + (own[y * W + x] ? ' in the lands of the ' + S.cultures[own[y * W + x]].name : '') + ', raising new mountains.');
+}
+const POWERS = {
+  rain: { g: 'Weather', n: 'Rain', cost: 5, r: 4, d: 'Soak the land. Deserts turn green and forests spread.' },
+  drought: { g: 'Weather', n: 'Drought', cost: 5, r: 4, d: 'Dry the land out. Harvests fail and deserts grow.' },
+  forest: { g: 'Weather', n: 'Forest', cost: 8, r: 3, d: 'Grow thick woodland on dry or open land.' },
+  warm: { g: 'Weather', n: 'Warm world', cost: 20, r: 0, d: 'Warm the whole planet. Ice melts, the tropics spread.' },
+  cool: { g: 'Weather', n: 'Cool world', cost: 20, r: 0, d: 'Cool the whole planet. Ice and tundra creep outward.' },
+  raise: { g: 'Land', n: 'Raise land', cost: 6, r: 3, d: 'Push the ground up. Seas become coasts, hills become peaks.' },
+  sink: { g: 'Land', n: 'Sink land', cost: 6, r: 3, d: 'Press the ground down to make bays, lakes and straits.' },
+  island: { g: 'Land', n: 'New island', cost: 15, r: 3, d: 'Lift a fresh island from the sea, empty and waiting.' },
+  volcano: { g: 'Land', n: 'Volcano', cost: 12, r: 3, d: 'Raise a fiery mountain. Destroys life nearby, leaves rich soil.' },
+  meteor: { g: 'Trials', n: 'Meteor', cost: 40, r: 5, d: 'Strike the world. Mass extinction, then a burst of new species.' },
+  plague: { g: 'Trials', n: 'Plague', cost: 25, r: 0, d: 'Sicken the species or people living here.' },
+  quake: { g: 'Trials', n: 'Earthquake', cost: 15, r: 3, d: 'Shake the ground. Settlements crumble and land shifts.' },
+  spark: { g: 'Gifts', n: 'Spark of life', cost: 15, r: 5, d: 'Life mutates ten times faster here for a while.' },
+  monolith: { g: 'Gifts', n: 'Monolith', cost: 30, r: 4, d: 'A strange stone that nudges nearby creatures toward intelligence.' },
+  inspire: { g: 'Gifts', n: 'Whisper an idea', cost: 30, r: 0, d: 'Give a people a head start on their next discovery. Once per discovery.' },
+  prophet: { g: 'Gifts', n: 'Send a prophet', cost: 25, r: 0, d: 'Unite a people in faith: more growth, fewer wars and splits.' },
+  bounty: { g: 'Gifts', n: 'Bountiful year', cost: 15, r: 0, d: 'Crops overflow. A people grows quickly and its villages swell.' },
+};
+function energyNow(now) { return Math.min(100, S.energy + (now - S.energyAt) / 20000); }
+function placeName(x, y) {
+  const i = y * W + x, c = own[i] ? S.cultures[own[i]] : null;
+  if (c) { let best = null, bd = 1e9; for (const ct of S.cities) if (ct.cul === c.id) { const d = distW(ct.i, i); if (d < bd) { bd = d; best = ct; } } return best && bd < 4 ? 'near ' + best.name + ' in the lands of the ' + c.name : 'in the lands of the ' + c.name; }
+  const lat = (0.5 - (y + 0.5) / H) * 180;
+  const band = Math.abs(lat) > 60 ? 'polar' : Math.abs(lat) > 30 ? (lat > 0 ? 'northern' : 'southern') : 'tropical';
+  return (water[i] ? 'over the ' + band + ' sea' : 'on the ' + band + ' ' + BIOME[biome[i]].n.toLowerCase());
+}
+function usePower(key, x, y, now) {
+  const P = POWERS[key], e = energyNow(now);
+  if (e < P.cost) return { ok: false, msg: 'Not enough spirit. ' + P.n + ' needs ' + P.cost + '.' };
+  const i = y * W + x, c = own[i] ? S.cultures[own[i]] : null, s = sp[i] ? S.species[sp[i]] : null, where = placeName(x, y);
+  let msg = '', log = '';
+  switch (key) {
+    case 'rain': area(x, y, P.r, (j, d) => { moist[j] = clamp(moist[j] + 70 * (1 - d * 0.6), 0, 255); }); retile(x, y, P.r); S.fx.push({ t: 'rain', x, y, ttl: 40, r: P.r, real: 1 }); msg = 'Rain fell for many days.'; log = 'You sent rain ' + where + '.'; break;
+    case 'drought': area(x, y, P.r, (j, d) => { moist[j] = clamp(moist[j] - 70 * (1 - d * 0.6), 0, 255); }); retile(x, y, P.r); killPop(x, y, P.r, 0.15); S.fx.push({ t: 'heat', x, y, ttl: 40, r: P.r, real: 1 }); msg = 'The rains stopped and the land cracked.'; log = 'You brought drought ' + where + '.'; break;
+    case 'forest': { let k = 0; area(x, y, P.r, j => { if (!water[j]) { moist[j] = Math.max(moist[j], 190); k++; } }); if (!k) return { ok: false, msg: 'Forests cannot grow on water.' }; retile(x, y, P.r); msg = 'Woods sprang up across the land.'; log = 'You grew a forest ' + where + '.'; break; }
+    case 'warm': S.gt = Math.min(0.32, S.gt + 0.06); computeAll(); recount(); log = 'You warmed the whole world. Ice retreats toward the poles.'; break;
+    case 'cool': S.gt = Math.max(-0.32, S.gt - 0.06); computeAll(); recount(); log = 'You cooled the whole world. Glaciers advance.'; break;
+    case 'raise': area(x, y, P.r, (j, d) => { height[j] = clamp(height[j] + 22 * (1 - d * 0.7), 0, 255); }); retile(x, y, P.r); log = 'You raised the land ' + where + '.'; break;
+    case 'sink': area(x, y, P.r, (j, d) => { height[j] = clamp(height[j] - 22 * (1 - d * 0.7), 0, 255); if (height[j] <= SEA && sp[j] && S.species[sp[j]] && S.species[sp[j]].hab === 2) setSp(j, 0); if (height[j] <= SEA && own[j]) claim(j, 0); }); S.cities = S.cities.filter(ct => height[ct.i] > SEA); retile(x, y, P.r); log = 'You sank the land ' + where + '.'; break;
+    case 'island': if (!water[i]) return { ok: false, msg: 'Islands rise from the sea. Choose a spot in the water.' };
+      area(x, y, P.r, (j, d) => { height[j] = clamp(Math.max(height[j], SEA + 4 + 24 * (1 - d)), 0, 255); if (sp[j] && S.species[sp[j]] && S.species[sp[j]].hab === 0) setSp(j, 0); }); retile(x, y, P.r); log = 'You lifted a new island from the sea.'; break;
+    case 'volcano': volcano(x, y, false); log = 'You raised a volcano ' + where + '. Ash will make the soil rich.'; break;
+    case 'meteor': impact(x, y, P.r); log = 'You hurled a meteor ' + where + '. The sky went dark and the world grew cold.'; break;
+    case 'plague':
+      if (c) { c.pop *= 0.55; c.sick = S.tick + 2 * DAY_T; for (const id of c.nb) { const d = S.cultures[id]; if (d && R() < 0.5) d.pop *= 0.8; } log = 'You sent a plague upon ' + nation(c) + '.'; }
+      else if (s) { for (let j = 0; j < N; j++) if (sp[j] === s.id && R() < 0.65) setSp(j, 0); log = 'You sent a plague upon ' + s.name + '. Most of them perished.'; }
+      else return { ok: false, msg: 'Nothing lives here to sicken.' };
+      break;
+    case 'quake': { area(x, y, P.r, (j, d) => { height[j] = clamp(height[j] + gauss() * 12 * (1 - d), 0, 255); }); killPop(x, y, P.r, 0.2); let fell = []; S.cities = S.cities.filter(ct => { if (distW(ct.i, i) < 2.5 && !ct.cap && R() < 0.7) { fell.push(ct.name); return false; } return true; }); retile(x, y, P.r); S.fx.push({ t: 'quake', x, y, ttl: 6, r: P.r, real: 1 }); log = 'You shook the earth ' + where + (fell.length ? '. ' + fell.join(', ') + (fell.length > 1 ? ' fell' : ' fell') + ' to ruin.' : '.'); break; }
+    case 'spark': S.boosts.push({ t: 'spark', x, y, r: P.r, ttl: 600 }); if (!sp[i]) { const like = { hab: water[i] ? 0 : 2, heat: temp[i], size: 2, diet: 0, cx: water[i] ? 1 : 3.6, iq: 0, hue: (R() * 360) | 0 }; const ns = mkSpecies(null, like); area(x, y, 1.5, j => { if (habitable(ns, j) && !sp[j]) setSp(j, ns.id); }); } log = 'You breathed a spark of life ' + where + '. Creatures there change quickly.'; break;
+    case 'monolith': S.boosts.push({ t: 'monolith', x, y, r: P.r, ttl: 3000 }); log = 'You placed a black monolith ' + where + '. Those who touch it begin to wonder.'; break;
+    case 'inspire': if (!c) return { ok: false, msg: 'Whisper ideas to a people. Choose land they live on.' };
+      if (c.tech >= TECHS.length) return { ok: false, msg: 'The ' + c.name + ' already know everything you could teach.' };
+      if (c.inspired === c.tech) return { ok: false, msg: 'The ' + c.name + ' are still thinking about your last idea. Try again after their next discovery.' };
+      c.inspired = c.tech; c.rp += techCost(c.tech) * 0.3; log = 'You whispered an idea to a dreamer of the ' + c.name + '. They woke thinking about ' + TECHS[c.tech][0].toLowerCase() + '.'; break;
+    case 'prophet': if (!c) return { ok: false, msg: 'Prophets speak to a people. Choose land they live on.' };
+      c.faith = Math.min(1, c.faith + 0.35); c.aggr = Math.max(0.05, c.aggr - 0.15); if (c.dark) c.dark = S.tick + 1; log = 'You sent a prophet to the ' + c.name + '. The ' + c.faithName + ' filled their hearts with peace.'; break;
+    case 'bounty': if (!c) return { ok: false, msg: 'Choose land where a people lives.' };
+      c.pop = Math.min(capOf(c) * 1.2, c.pop * 1.5 + 50); for (const ct of S.cities) if (ct.cul === c.id) ct.w *= 1.15; log = 'You blessed the fields of the ' + c.name + ' with a bountiful year.'; break;
+  }
+  S.energy = e - P.cost; S.energyAt = now; S.stats.actions = (S.stats.actions || 0) + 1;
+  if (log) addLog('you', log, now);
+  return { ok: true, msg: msg || log };
+}
+
+// ---------- persistence ----------
+function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function unb64(str) { const s = atob(str), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+function serialize(now) {
+  S.savedAt = now;
+  const o = Object.assign({}, S);
+  o.species = Object.values(S.species).map(s => [s.id, s.name, s.peak, s.gen, s.est, s.hab, +s.heat.toFixed(2), s.size, s.diet, +s.cx.toFixed(1), +s.iq.toFixed(1), Math.round(s.hue), s.awoke ? 1 : 0]);
+  o.cultures = Object.values(S.cultures).map(c => { const x = Object.assign({}, c); delete x._c; return x; });
+  o.cities = S.cities.map(ct => ({ i: ct.i, name: ct.name, cul: ct.cul, born: ct.born, cap: ct.cap, w: +ct.w.toFixed(3), tier: ct.tier, bornAt: ct.bornAt }));
+  o.maps = { h: b64(height), m: b64(moist), s: b64(new Uint8Array(sp.buffer)), o: b64(new Uint8Array(own.buffer)) };
+  delete o._tempKey;
+  return JSON.stringify(o);
+}
+function deserialize(str) {
+  const o = JSON.parse(str);
+  if (o.v !== 2) throw new Error('old save');
+  height.set(unb64(o.maps.h)); moist.set(unb64(o.maps.m));
+  sp.set(new Uint16Array(unb64(o.maps.s).buffer)); own.set(new Uint16Array(unb64(o.maps.o).buffer));
+  const species = {};
+  for (const a of o.species) species[a[0]] = { id: a[0], name: a[1], genus: a[1].split(' ')[0], parent: 0, born: 0, peak: a[2], gen: a[3], est: a[4], hab: a[5], heat: a[6], size: a[7], diet: a[8], cx: a[9], iq: a[10], hue: a[11], awoke: a[12], tiles: 0 };
+  const cultures = {}; for (const c of o.cultures) cultures[c.id] = c;
+  delete o.maps; o.species = species; o.cultures = cultures;
+  S = o; S.fast = 1;
+  for (let i = 0; i < N; i++) { const id = sp[i]; if (id) { const s = species[id]; if (s) s.tiles++; else sp[i] = 0; } }
+  for (const s of Object.values(species)) if (!s.tiles) delete species[s.id];
+  S.spCount = Object.keys(species).length;
+  computeAll(); recount();
+  return S;
+}
+
+if (typeof module !== 'undefined' && typeof window === 'undefined') module.exports = { decP, paceOf, get S() { return S; }, set STAMP(v) { STAMP = v; }, newWorld, step, serialize, deserialize, usePower, eraName, dateLabel, tickMs, sp, own, W, H, N, TECHS, AGES, ageOf, popOf, tierOf, setTech(b) { TECH_SCALE = b; } };
+
+// ===== Worldseed interface (globe) =====
+(function () {
+  const $ = s => document.querySelector(s);
+  const KEY = 'worldseed.save.v2';
+  const SUN_DAY = 12 * 60 * 1000; // the sun circles the globe every 12 minutes
+  const KIND = { life: '#72d4a6', big: '#e9b54d', death: '#e27d6c', war: '#f0604c', peace: '#82b5ea', tech: '#b7a0f2', city: '#dac28c', nature: '#5fc2c6', nation: '#e79ac4', culture: '#8fd0e8', wonder: '#f3d27e', you: '#f4f1ea' };
+  const KLABEL = { life: 'Life', big: 'Milestone', death: 'Loss', war: 'War', peace: 'Peace', tech: 'Discovery', city: 'Settlement', nature: 'Nature', nation: 'Nation', culture: 'Culture', wonder: 'Wonder', you: 'You' };
+  const FILTERS = [['all', 'All'], ['you', 'Your actions'], ['disc', 'Discoveries'], ['nat', 'Nations'], ['cul', 'Culture'], ['war', 'Wars & disasters'], ['life', 'Life']];
+  const FMAP = { you: ['you'], disc: ['tech', 'big'], nat: ['nation', 'city', 'wonder'], cul: ['culture', 'wonder'], war: ['war', 'peace', 'death', 'nature'], life: ['life'] };
+  const HAB = ['Sea', 'Shore', 'Land'];
+  const SIZE = ['', 'Tiny', 'Tiny', 'Small', 'Small', 'Medium', 'Medium', 'Large', 'Large', 'Giant', 'Giant'];
+  const ICONS = {
+    rain: '<path d="M6 12a4 4 0 1 1 1-7.9A5 5 0 0 1 16 7a3 3 0 0 1-1 5.8H6z"/><path d="M7 15l-1 2.5M11 15l-1 2.5M15 15l-1 2.5"/>',
+    drought: '<circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4"/>',
+    forest: '<path d="M10 2l5 7h-3l4 5H4l4-5H5z"/><path d="M10 14v4"/>',
+    warm: '<path d="M8 3a2 2 0 0 1 4 0v8a4 4 0 1 1-4 0z"/><path d="M10 7v6"/><path d="M15 3l2 2-2 2"/>',
+    cool: '<path d="M10 2v16M3 6l14 8M3 14l14-8"/><path d="M8 3l2 1.5L12 3M8 17l2-1.5 2 1.5"/>',
+    raise: '<path d="M2 17l5-8 3 4 3-6 5 10z"/><path d="M13 1.5v4M11 3.5l2-2 2 2"/>',
+    sink: '<path d="M2 8c2-2 4 2 6 0s4 2 6 0 3 1 4 0"/><path d="M10 11v6M8 15l2 2 2-2"/>',
+    island: '<path d="M4 14c2 0 3-1.5 6-1.5s4 1.5 6 1.5"/><path d="M2 17c2-1 4 1 6 0s4 1 6 0 3-.5 4 0"/><path d="M10 12.5V6M10 6c-2-1-4 0-5 1M10 6c2-1 4 0 5 1"/>',
+    volcano: '<path d="M2 17l5-8h6l5 8z"/><path d="M9 9V6M11 9V5M8 3c1 0 1 1 2 1s1-1 2-1"/>',
+    meteor: '<circle cx="13" cy="13" r="3.5"/><path d="M3 3l7 7M6.5 2l4.5 4.5M2 6.5l4.5 4.5"/>',
+    plague: '<circle cx="10" cy="10" r="3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.4 1.4M13.6 13.6L15 15M5 15l1.4-1.4M13.6 6.4L15 5"/>',
+    quake: '<path d="M2 10h3l2-5 3 10 2-7 2 4h4"/>',
+    spark: '<path d="M10 2l1.8 6.2L18 10l-6.2 1.8L10 18l-1.8-6.2L2 10l6.2-1.8z"/>',
+    monolith: '<path d="M7.5 18V4l2.5-2 2.5 2v14z"/><path d="M4 18h12"/>',
+    inspire: '<path d="M7 13a5 5 0 1 1 6 0v2H7z"/><path d="M8 18h4"/>',
+    prophet: '<circle cx="10" cy="6.5" r="2.5"/><path d="M6 18l1.5-7h5L14 18"/><path d="M10 1v1.5M4 3.5l1 1M16 3.5l-1 1"/>',
+    bounty: '<path d="M10 18V8"/><path d="M10 8c0-3 2-5 5-5 0 3-2 5-5 5zM10 12c0-3-2-5-5-5 0 3 2 5 5 5zM10 16c0-2.5 2-4 4.5-4 0 2.5-2 4-4.5 4z"/>',
+  };
+  const GROUPS = ['Weather', 'Land', 'Trials', 'Gifts'];
+
+  let speed = 1, mode = 'world', selPower = null, group = 'Weather', hfilter = 'all';
+  let inspectTile = -1, hl = null, ready = false, busy = false, spin = true;
+  let dbRef = null, saving = false, pendingSave = false;
+  let hintText = '', hintAt = 0, texDirty = true, lastPaint = 0;
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function hsl(h, s, l) { h /= 360; const f = n => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); }; return [f(0), f(8), f(4)]; }
+  const spRGB = s => s._c || (s._c = hsl(s.hue, s.hab === 0 ? 0.5 : 0.62, s.hab === 0 ? 0.6 : 0.52));
+  const culRGB = c => c._c || (c._c = hsl(c.hue, 0.72, 0.56));
+  const css = a => 'rgb(' + a[0] + ',' + a[1] + ',' + a[2] + ')';
+  function fmtPop(n) { n = Math.round(n); if (n < 1e4) return n.toLocaleString('en-US'); if (n < 1e6) return (n / 1e3).toFixed(n < 1e5 ? 1 : 0) + ' thousand'; if (n < 1e9) return (n / 1e6).toFixed(1) + ' million'; return (n / 1e9).toFixed(2) + ' billion'; }
+  const shortPop = n => fmtPop(n).replace(' thousand', 'k').replace(' million', 'M').replace(' billion', 'B');
+  function fmtDur(ms) { const m = Math.round(ms / 60000); if (m < 60) return Math.max(1, m) + ' min'; const h = Math.floor(m / 60); if (h < 48) return h + ' h ' + (m % 60) + ' min'; const d = Math.floor(h / 24); return d + ' days ' + (h % 24) + ' h'; }
+  function fmtIn(ms) { if (ms < 3600e3) return 'about ' + Math.max(1, Math.round(ms / 60000)) + ' min'; if (ms < 48 * 3600e3) return 'about ' + Math.round(ms / 3600e3) + ' h'; return 'about ' + Math.round(ms / 86400e3) + ' days'; }
+  const tm = at => new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  function dayLabel(at) {
+    const d = new Date(at), t = new Date(); const k = x => x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate();
+    if (k(d) === k(t)) return 'Today'; const y = new Date(t.getTime() - 86400e3); if (k(d) === k(y)) return 'Yesterday';
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  const fullDate = at => new Date(at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ', ' + tm(at);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  let toastT = 0;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3400); }
+
+  // ---------- globe geometry ----------
+  let yaw = 0.4, pitch = 0.35, zoom = 1, vyaw = 0, vpitch = 0, lastTouch = -1e9, anim = null;
+  let cw = 0, ch = 0, dpr = 1, radius = 1;
+  let M = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  function updM() {
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp_ = Math.sin(pitch);
+    M = [cy, -sy * sp_, sy * cp, 0, cp, sp_, -sy, -cy * sp_, cy * cp]; // row-major, view to world
+  }
+  function tileLL(i) { const x = i % W, y = (i / W) | 0; return [(0.5 - (y + 0.5) / H) * Math.PI, ((x + 0.5) / W - 0.5) * 2 * Math.PI]; }
+  function vec(lat, lon) { return [Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon)]; }
+  function project(w) { // world vector to CSS pixel, with facing
+    const vx = M[0] * w[0] + M[3] * w[1] + M[6] * w[2], vy = M[1] * w[0] + M[4] * w[1] + M[7] * w[2], vz = M[2] * w[0] + M[5] * w[1] + M[8] * w[2];
+    return { x: cw / 2 + vx * radius, y: ch / 2 - vy * radius, z: vz };
+  }
+  const projTile = i => { const [la, lo] = tileLL(i); return project(vec(la, lo)); };
+  function pickTile(sx, sy) {
+    const px = (sx - cw / 2) / radius, py = -(sy - ch / 2) / radius, r2 = px * px + py * py;
+    if (r2 > 1) return -1;
+    const n = [px, py, Math.sqrt(1 - r2)];
+    const w = [M[0] * n[0] + M[1] * n[1] + M[2] * n[2], M[3] * n[0] + M[4] * n[1] + M[5] * n[2], M[6] * n[0] + M[7] * n[1] + M[8] * n[2]];
+    const lat = Math.asin(clamp(w[1], -1, 1)), lon = Math.atan2(w[0], w[2]);
+    const x = ((Math.floor((lon / (2 * Math.PI) + 0.5) * W)) % W + W) % W, y = clamp(Math.floor((0.5 - lat / Math.PI) * H), 0, H - 1);
+    return y * W + x;
+  }
+  function focusTile(i, z) {
+    const [lat, lon] = tileLL(i);
+    let ty = lon; while (ty - yaw > Math.PI) ty -= 2 * Math.PI; while (ty - yaw < -Math.PI) ty += 2 * Math.PI;
+    anim = { y0: yaw, p0: pitch, z0: zoom, y1: ty, p1: clamp(lat, -1.3, 1.3), z1: z || Math.max(zoom, 2), t0: performance.now(), d: 900 };
+    lastTouch = performance.now();
+  }
+
+  // ---------- WebGL ----------
+  const glc = $('#gl'), ovc = $('#ov'), octx = ovc.getContext('2d');
+  const gl = glc.getContext('webgl', { antialias: true, alpha: false, preserveDrawingBuffer: false }) || glc.getContext('experimental-webgl');
+  const TS = 8, TW = W * TS, TH = H * TS; // texture pixels per tile
+  const tex = document.createElement('canvas'); tex.width = TW; tex.height = TH; const tctx = tex.getContext('2d', { willReadFrequently: true });
+  const lit = document.createElement('canvas'); lit.width = TW; lit.height = TH; const lctx = lit.getContext('2d', { willReadFrequently: true });
+  const timg = tctx.createImageData(TW, TH);
+  let prog = null, uni = {}, texA = null, texL = null, texC = null;
+  const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const FS = `precision highp float;
+uniform sampler2D uTex,uLights,uClouds;uniform vec2 uRes;uniform float uScale,uTime,uCloud;uniform mat3 uRot;uniform vec3 uSun;
+float hash(vec2 c){return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453);}
+void main(){
+ vec2 p=(gl_FragCoord.xy-0.5*uRes)/uScale; float r2=dot(p,p); float d=sqrt(r2);
+ vec2 c=floor(gl_FragCoord.xy/2.0); float h=hash(c);
+ vec3 space=vec3(0.012,0.02,0.04)+vec3(step(0.9972,h)*(0.45+0.45*sin(uTime*1.3+h*90.0)));
+ float glow=exp(-max(d-1.0,0.0)*16.0); space+=vec3(0.32,0.58,1.0)*glow*0.5*step(1.0,d);
+ if(r2>1.0){gl_FragColor=vec4(space,1.0);return;}
+ vec3 n=vec3(p,sqrt(1.0-r2)); vec3 w=uRot*n;
+ float lon=atan(w.x,w.z); float lat=asin(clamp(w.y,-1.0,1.0));
+ vec2 uv=vec2(lon/6.2831853+0.5,0.5-lat/3.1415927);
+ vec3 col=texture2D(uTex,uv).rgb;
+ float l=dot(w,uSun); float day=smoothstep(-0.14,0.22,l); float diff=0.38+0.62*max(l,0.0);
+ vec3 lt=col*mix(0.2,diff*1.06,day);
+ float cl=texture2D(uClouds,vec2(uv.x+uTime*0.0016,uv.y)).r; cl=smoothstep(0.52,0.82,cl)*0.62*uCloud;
+ lt=mix(lt,vec3(0.95,0.97,1.0)*mix(0.05,diff,day),cl);
+ vec3 L=texture2D(uLights,uv).rgb; lt+=L*(1.0-day)*(1.0-cl*0.7)*1.25;
+ float rim=pow(1.0-n.z,2.4); lt+=vec3(0.28,0.52,1.0)*rim*(0.18+0.55*day);
+ float edge=smoothstep(1.0,1.0-2.2/uScale,d);
+ gl_FragColor=vec4(mix(space,lt,edge),1.0);
+}`;
+  function mkTex(src, wrapS) {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); return t;
+  }
+  function initGL() {
+    if (!gl) return false;
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+    prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog); gl.useProgram(prog);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const u of ['uTex', 'uLights', 'uClouds', 'uRes', 'uScale', 'uTime', 'uRot', 'uSun', 'uCloud']) uni[u] = gl.getUniformLocation(prog, u);
+    texA = mkTex(tex); texL = mkTex(lit); texC = mkTex(makeClouds());
+    gl.uniform1i(uni.uTex, 0); gl.uniform1i(uni.uLights, 1); gl.uniform1i(uni.uClouds, 2);
+    return true;
+  }
+  function makeClouds() {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'), im = x.createImageData(256, 128);
+    const nz = noise3(mkRng(91)), nz2 = noise3(mkRng(17));
+    for (let y = 0; y < 128; y++) for (let k = 0; k < 256; k++) {
+      const lat = (0.5 - (y + 0.5) / 128) * Math.PI, lon = ((k + 0.5) / 256 - 0.5) * 2 * Math.PI, v = vec(lat, lon);
+      let a = 0, amp = 1, f = 2.2; for (let o = 0; o < 5; o++) { a += nz(v[0] * f, v[1] * f * 1.6, v[2] * f) * amp; amp *= 0.5; f *= 2.1; }
+      a += nz2(v[0] * 1.2, v[1] * 3, v[2] * 1.2) * 0.4;
+      const val = clamp(Math.round((a * 0.9 + 0.5) * 255), 0, 255), p = (y * 256 + k) * 4; im.data[p] = im.data[p + 1] = im.data[p + 2] = val; im.data[p + 3] = 255;
+    }
+    x.putImageData(im, 0, 0); return c;
+  }
+  let fallback2d = null;
+  function resize() {
+    const r = $('#globe').getBoundingClientRect(); cw = r.width; ch = r.height; dpr = Math.min(2, window.devicePixelRatio || 1);
+    glc.width = Math.round(cw * dpr); glc.height = Math.round(ch * dpr); ovc.width = glc.width; ovc.height = glc.height;
+    if (gl) gl.viewport(0, 0, glc.width, glc.height);
+  }
+  window.addEventListener('resize', () => { resize(); });
+
+  // ---------- texture painting ----------
+  // per-pixel bilinear lookup tables: one row of x and one column of y, combined on the fly
+  const gx0 = new Int32Array(TW), gx1 = new Int32Array(TW), gfx = new Float32Array(TW), gy0 = new Int32Array(TH), gy1 = new Int32Array(TH), gfy = new Float32Array(TH);
+  for (let px = 0; px < TW; px++) { const tx = (px + 0.5) / TS - 0.5, x0 = Math.floor(tx); gx0[px] = (x0 + W) % W; gx1[px] = (x0 + 1) % W; gfx[px] = tx - x0; }
+  for (let py = 0; py < TH; py++) { const ty = clamp((py + 0.5) / TS - 0.5, 0, H - 1), y0 = Math.floor(ty); gy0[py] = y0; gy1[py] = Math.min(H - 1, y0 + 1); gfy[py] = ty - y0; }
+  const grain = new Float32Array(TW * TH); { const rg = mkRng(5); for (let p = 0; p < TW * TH; p++) grain[p] = 0.95 + rg() * 0.1; }
+  const hb = new Float32Array(TW * TH), qi = [0, 0, 0, 0], qw = [0, 0, 0, 0];
+  function paintTex() {
+    const d = timg.data, hlT = hl && performance.now() < hl.until ? hl : null;
+    for (let py = 0; py < TH; py++) { const a = gy0[py] * W, bb = gy1[py] * W, fy = gfy[py]; for (let px = 0; px < TW; px++) { const fx = gfx[px], x0 = gx0[px], x1 = gx1[px]; hb[py * TW + px] = (height[a + x0] * (1 - fx) + height[a + x1] * fx) * (1 - fy) + (height[bb + x0] * (1 - fx) + height[bb + x1] * fx) * fy; } }
+    for (let py = 0; py < TH; py++) for (let px = 0; px < TW; px++) {
+      const p = py * TW + px, q = p * 4, h = hb[p], wet = h <= SEA + 0.5, ni = ((py / TS) | 0) * W + ((px / TS) | 0);
+      const fx = gfx[px], fy = gfy[py], a = gy0[py] * W, bb = gy1[py] * W;
+      qi[0] = a + gx0[px]; qi[1] = a + gx1[px]; qi[2] = bb + gx0[px]; qi[3] = bb + gx1[px];
+      qw[0] = (1 - fx) * (1 - fy); qw[1] = fx * (1 - fy); qw[2] = (1 - fx) * fy; qw[3] = fx * fy;
+      let r = 0, g = 0, b = 0, ws = 0;
+      for (let k = 0; k < 4; k++) { const i = qi[k]; if ((water[i] === 1) === wet) { const c = BIOME[biome[i]].c, w = qw[k]; r += c[0] * w; g += c[1] * w; b += c[2] * w; ws += w; } }
+      if (ws > 0) { r /= ws; g /= ws; b /= ws; }
+      else if (wet) { const c = temp[ni] < 0.1 ? BIOME[BIO.ICE].c : BIOME[BIO.SEA].c; r = c[0]; g = c[1]; b = c[2]; }
+      else { const c = temp[ni] < 0.12 ? BIOME[BIO.SNOW].c : BIOME[BIO.COAST].c; r = c[0]; g = c[1]; b = c[2]; }
+      if (wet) { const k = 0.55 + 0.5 * h / SEA; r *= k; g *= k; b *= k; }
+      else {
+        const hx = hb[py * TW + (px + 1) % TW], hy = py > 0 ? hb[p - TW] : h;
+        const k = clamp(1 + (h - (hx + hy) / 2) * 0.09 + (h - SEA) / 255 * 0.15, 0.7, 1.35) * grain[p]; r *= k; g *= k; b *= k;
+      }
+      const s = sp[ni] ? S.species[sp[ni]] : null, o = own[ni] && !wet ? S.cultures[own[ni]] : null;
+      if (mode === 'life') {
+        const m = (r + g + b) / 3; r = r * 0.25 + m * 0.2; g = g * 0.25 + m * 0.2; b = b * 0.25 + m * 0.22 + 6;
+        if (s) { const c = spRGB(s), a = 0.85; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+      } else if (mode === 'peoples') {
+        const m = (r + g + b) / 3; r = r * 0.45 + m * 0.25; g = g * 0.45 + m * 0.25; b = b * 0.45 + m * 0.25;
+        if (o) { const c = culRGB(o), a = 0.7; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+      } else {
+        if (s && !wet) { const c = spRGB(s), a = 0.08; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+        if (o) { const c = culRGB(o), a = 0.26; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+      }
+      // borders between nations, drawn on tile edges
+      if (!wet && mode !== 'life' && (own[ni] || 0)) {
+        const lx = px % TS, ly = py % TS, tx = (px / TS) | 0;
+        let edge = false;
+        if (lx === TS - 1) { const j = ((py / TS) | 0) * W + (tx + 1) % W; if (own[j] !== own[ni]) edge = true; }
+        if (ly === TS - 1 && py < TH - TS) { if (own[ni + W] !== own[ni]) edge = true; }
+        if (lx === 0) { const j = ((py / TS) | 0) * W + (tx - 1 + W) % W; if (own[j] !== own[ni]) edge = true; }
+        if (ly === 0 && py >= TS) { if (own[ni - W] !== own[ni]) edge = true; }
+        if (edge) { const c = o ? culRGB(o) : [255, 255, 255]; r = c[0] * 0.55 + 255 * 0.45; g = c[1] * 0.55 + 245 * 0.45; b = c[2] * 0.55 + 225 * 0.45; }
+      }
+      if (hlT) { const hit = hlT.t === 's' ? sp[ni] === hlT.id : own[ni] === hlT.id; if (hit) { r = r * 0.45 + 255 * 0.55; g = g * 0.45 + 238 * 0.55; b = b * 0.45 + 190 * 0.55; } else { r *= 0.5; g *= 0.5; b *= 0.5; } }
+      d[q] = r; d[q + 1] = g; d[q + 2] = b; d[q + 3] = 255;
+    }
+    tctx.putImageData(timg, 0, 0);
+    // roads, then settlements, drawn onto the planet surface
+    if (mode !== 'life' && S.cities.length) {
+      const pos = ct => [((ct.i % W) + 0.5) * TS, (((ct.i / W) | 0) + 0.5) * TS];
+      tctx.lineCap = 'round';
+      for (const c of Object.values(S.cultures)) {
+        if (!knows(c, 'wheel')) continue;
+        const mine = S.cities.filter(x => x.cul === c.id); if (mine.length < 2) continue;
+        tctx.strokeStyle = knows(c, 'rail') ? 'rgba(40,36,34,.85)' : 'rgba(120,92,58,.8)'; tctx.lineWidth = knows(c, 'rail') ? 2 : 1.6;
+        tctx.beginPath();
+        for (const a of mine) {
+          let best = null, bd = 1e9; for (const b of mine) { if (b === a) continue; const dd = distW(a.i, b.i); if (dd < bd && (b.w > a.w || (b.w === a.w && b.i > a.i))) { bd = dd; best = b; } }
+          if (!best || bd > 9) continue;
+          let [x1, y1] = pos(a), [x2, y2] = pos(best); if (x2 - x1 > TW / 2) x2 -= TW; else if (x1 - x2 > TW / 2) x2 += TW;
+          tctx.moveTo(x1, y1); tctx.lineTo(x2, y2); if (x2 < 0) { tctx.moveTo(x1 + TW, y1); tctx.lineTo(x2 + TW, y2); } if (x2 > TW) { tctx.moveTo(x1 - TW, y1); tctx.lineTo(x2 - TW, y2); }
+        }
+        tctx.stroke();
+      }
+      for (const ct of S.cities) {
+        const [x, y] = pos(ct), t = ct.tier, rr = [1.6, 2.4, 3.2, 4.4, 5.8][t];
+        tctx.fillStyle = t >= 2 ? 'rgba(20,16,14,.55)' : 'rgba(40,30,20,.45)'; tctx.beginPath(); tctx.arc(x + 0.6, y + 0.6, rr + 1, 0, 7); tctx.fill();
+        tctx.fillStyle = t >= 3 ? '#f6ecd6' : t >= 1 ? '#e2cfa8' : '#b78f5f'; tctx.beginPath(); tctx.arc(x, y, rr, 0, 7); tctx.fill();
+      }
+      for (const w of S.wonders) { if (!S.cultures[w.cul]) continue; const x = ((w.i % W) + 0.5) * TS + 6, y = (((w.i / W) | 0) + 0.5) * TS - 4; tctx.fillStyle = '#f3d27e'; tctx.fillRect(x - 2, y - 2, 4, 4); }
+    }
+    // night lights
+    lctx.globalCompositeOperation = 'source-over'; lctx.fillStyle = '#000'; lctx.fillRect(0, 0, TW, TH); lctx.globalCompositeOperation = 'lighter';
+    for (const ct of S.cities) {
+      const c = S.cultures[ct.cul]; if (!c) continue;
+      const elec = knows(c, 'elec'), x = ((ct.i % W) + 0.5) * TS, y = (((ct.i / W) | 0) + 0.5) * TS;
+      const rr = (elec ? [6, 8, 12, 18, 26] : [4.4, 5.6, 7.2, 9.2, 12])[ct.tier], a = elec ? 0.95 : 0.6;
+      const col = elec ? '255,226,150' : '255,140,50';
+      for (const ox of [0, -TW, TW]) {
+        if (x + ox + rr < 0 || x + ox - rr > TW) continue;
+        const gr = lctx.createRadialGradient(x + ox, y, 0, x + ox, y, rr); gr.addColorStop(0, 'rgba(' + col + ',' + a + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)');
+        lctx.fillStyle = gr; lctx.beginPath(); lctx.arc(x + ox, y, rr, 0, 7); lctx.fill();
+      }
+    }
+    if (gl) {
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texA); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texL); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, lit);
+    }
+    texDirty = false; lastPaint = performance.now();
+  }
+
+  // ---------- render ----------
+  let clouds = true;
+  function sunVec(now) {
+    const ph = ((now - S.created) / SUN_DAY) % 1, doy = (now / 86400e3) % 365.25;
+    const lat = 0.41 * Math.sin(2 * Math.PI * (doy - 80) / 365.25), lon = -ph * 2 * Math.PI + Math.PI;
+    return vec(lat, lon);
+  }
+  function render(t) {
+    if (!S || !cw) return;
+    radius = Math.min(cw, ch) / 2 * 0.86 * zoom;
+    updM();
+    const now = Date.now(), sun = sunVec(now);
+    if (gl) {
+      gl.uniform2f(uni.uRes, glc.width, glc.height); gl.uniform1f(uni.uScale, radius * dpr); gl.uniform1f(uni.uTime, t / 1000); gl.uniform1f(uni.uCloud, clouds && mode === 'world' ? 1 : 0);
+      gl.uniformMatrix3fv(uni.uRot, false, new Float32Array([M[0], M[3], M[6], M[1], M[4], M[7], M[2], M[5], M[8]]));
+      gl.uniform3f(uni.uSun, sun[0], sun[1], sun[2]);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texA); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texL); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, texC);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    drawOverlay(t, sun);
+  }
+  function drawOverlay(t, sun) {
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, ovc.width, ovc.height); octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!gl) { octx.fillStyle = '#ece7da'; octx.font = '14px Figtree, sans-serif'; octx.fillText('This device could not start the 3D globe.', 16, 30); return; }
+    const boxes = [];
+    const free = (x, y, w, h) => { for (const b of boxes) if (x < b[0] + b[2] && x + w > b[0] && y < b[1] + b[3] && y + h > b[1]) return false; boxes.push([x, y, w, h]); return true; };
+    // nation names at capitals
+    if (mode !== 'life') {
+      const caps = S.cities.filter(c => c.cap && S.cultures[c.cul]).sort((a, b) => S.cultures[b.cul].pop - S.cultures[a.cul].pop);
+      octx.textAlign = 'center'; octx.textBaseline = 'middle';
+      for (const ct of caps) {
+        const p = projTile(ct.i); if (p.z < 0.25) continue; const c = S.cultures[ct.cul];
+        const fs = clamp(11 + zoom * 1.5 + Math.min(4, c.tiles / 120), 11, 19), label = c.gov === 'Tribe' ? c.name : c.name.toUpperCase();
+        octx.font = '700 ' + fs + 'px Syne, Figtree, sans-serif'; const wdt = octx.measureText(label).width + (c.gov === 'Tribe' ? 0 : label.length * 1.5);
+        const y = p.y - 11 - fs / 2;
+        if (!free(p.x - wdt / 2, y - fs / 2, wdt, fs)) continue;
+        octx.globalAlpha = clamp((p.z - 0.25) * 3, 0, 1);
+        if (octx.letterSpacing !== undefined) octx.letterSpacing = c.gov === 'Tribe' ? '0px' : '1.5px';
+        octx.lineWidth = 3.5; octx.strokeStyle = 'rgba(5,9,11,.8)'; octx.strokeText(label, p.x, y);
+        octx.fillStyle = mode === 'peoples' ? '#fff' : css(hsl(c.hue, 0.6, 0.82)); octx.fillText(label, p.x, y);
+        octx.globalAlpha = 1;
+        // capital marker
+        octx.fillStyle = '#fff'; octx.strokeStyle = 'rgba(5,9,11,.9)'; octx.lineWidth = 1.5; octx.beginPath(); const s = 3.5; octx.moveTo(p.x, p.y - s); octx.lineTo(p.x + s, p.y); octx.lineTo(p.x, p.y + s); octx.lineTo(p.x - s, p.y); octx.closePath(); octx.fill(); octx.stroke();
+      }
+      if (octx.letterSpacing !== undefined) octx.letterSpacing = '0px';
+      // settlement names when close
+      if (zoom >= 1.8) {
+        const minTier = zoom >= 3.2 ? 0 : zoom >= 2.4 ? 1 : 2;
+        octx.font = '500 11.5px Figtree, sans-serif';
+        for (const ct of S.cities.slice().sort((a, b) => b.w - a.w)) {
+          if (ct.cap || ct.tier < minTier) continue; const p = projTile(ct.i); if (p.z < 0.3) continue;
+          const wdt = octx.measureText(ct.name).width; if (!free(p.x - wdt / 2, p.y + 4, wdt, 13)) continue;
+          octx.lineWidth = 3; octx.strokeStyle = 'rgba(5,9,11,.75)'; octx.strokeText(ct.name, p.x, p.y + 11); octx.fillStyle = '#efe6d0'; octx.fillText(ct.name, p.x, p.y + 11);
+        }
+      }
+    }
+    // monoliths and sparks
+    for (const b of S.boosts) {
+      const p = projTile(b.y * W + b.x); if (p.z < 0.1) continue;
+      if (b.t === 'monolith') { octx.fillStyle = '#050505'; octx.strokeStyle = '#e9b54d'; octx.lineWidth = 1; octx.fillRect(p.x - 2.5, p.y - 12, 5, 12); octx.strokeRect(p.x - 2.5, p.y - 12, 5, 12); }
+      else { octx.strokeStyle = 'rgba(114,212,166,' + (0.5 + 0.3 * Math.sin(t / 300)) + ')'; octx.lineWidth = 1.5; ring(b.y * W + b.x, b.r); }
+    }
+    // effects
+    for (const f of S.fx) {
+      const p = projTile(f.y * W + f.x); if (p.z < 0.05) continue;
+      const age = (Date.now() - (f.born || (f.born = Date.now()))) / 1000;
+      if (age > 8) { f.ttl = 0; continue; }
+      if (f.t === 'flash') { const a = Math.max(0, 1 - age / 3), rr = (f.r || 5) * radius * 0.05 * (1 + age); const g = octx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr); g.addColorStop(0, 'rgba(255,250,230,' + a + ')'); g.addColorStop(0.5, 'rgba(255,150,60,' + a * 0.6 + ')'); g.addColorStop(1, 'rgba(255,80,30,0)'); octx.fillStyle = g; octx.beginPath(); octx.arc(p.x, p.y, rr, 0, 7); octx.fill(); }
+      else if (f.t === 'quake') { octx.strokeStyle = 'rgba(240,96,76,' + Math.max(0, 1 - age / 4) + ')'; octx.lineWidth = 2; ring(f.y * W + f.x, (f.r || 3) * (1 + age * 0.2)); }
+      else if (f.t === 'rain' || f.t === 'heat') { const rr = (f.r || 4) * radius * 0.05, a = Math.max(0, 1 - age / 8); const g = octx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr); const col = f.t === 'rain' ? '210,225,240' : '255,150,60'; g.addColorStop(0, 'rgba(' + col + ',' + 0.5 * a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); octx.fillStyle = g; octx.beginPath(); octx.arc(p.x, p.y, rr, 0, 7); octx.fill(); }
+      else if (f.t === 'smoke') { for (let k = 0; k < 4; k++) { const ph = ((t / 1000) * 0.6 + k / 4) % 1; octx.fillStyle = 'rgba(80,72,66,' + 0.45 * (1 - ph) + ')'; octx.beginPath(); octx.arc(p.x + Math.sin(k + t / 900) * 3, p.y - ph * 22, 3 + ph * 6, 0, 7); octx.fill(); } }
+    }
+    // aiming ring under the finger or cursor
+    if (selPower && hoverTile >= 0) { octx.setLineDash([5, 4]); octx.strokeStyle = 'rgba(233,181,77,.95)'; octx.lineWidth = 1.6; ring(hoverTile, Math.max(POWERS[selPower].r, 1)); octx.setLineDash([]); }
+    if (inspectTile >= 0 && !$('#pin').hidden) { const p = projTile(inspectTile); if (p.z > 0) { octx.strokeStyle = '#fff'; octx.lineWidth = 2; octx.beginPath(); octx.arc(p.x, p.y, 6 + Math.sin(t / 250) * 1.5, 0, 7); octx.stroke(); } }
+  }
+  function ring(i, r) {
+    const [lat, lon] = tileLL(i), ang = r * Math.PI / H; // tiles to radians on the sphere
+    const c = vec(lat, lon), up = Math.abs(c[1]) > 0.99 ? [1, 0, 0] : [0, 1, 0];
+    let e1 = [up[1] * c[2] - up[2] * c[1], up[2] * c[0] - up[0] * c[2], up[0] * c[1] - up[1] * c[0]]; const l1 = Math.hypot(...e1); e1 = e1.map(v => v / l1);
+    const e2 = [c[1] * e1[2] - c[2] * e1[1], c[2] * e1[0] - c[0] * e1[2], c[0] * e1[1] - c[1] * e1[0]];
+    octx.beginPath(); let started = false;
+    for (let k = 0; k <= 48; k++) {
+      const a = k / 48 * 2 * Math.PI, ca = Math.cos(ang), sa = Math.sin(ang);
+      const w = [c[0] * ca + (e1[0] * Math.cos(a) + e2[0] * Math.sin(a)) * sa, c[1] * ca + (e1[1] * Math.cos(a) + e2[1] * Math.sin(a)) * sa, c[2] * ca + (e1[2] * Math.cos(a) + e2[2] * Math.sin(a)) * sa];
+      const p = project(w); if (p.z < 0) { started = false; continue; }
+      if (!started) { octx.moveTo(p.x, p.y); started = true; } else octx.lineTo(p.x, p.y);
+    }
+    octx.stroke();
+  }
+
+  // ---------- input ----------
+  const globeEl = $('#globe'), ptrs = new Map();
+  let drag = null, pinch = null, hoverTile = -1;
+  const rel = ev => { const r = globeEl.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  globeEl.addEventListener('pointerdown', ev => {
+    if (ev.target.closest('.hud') || ev.target.closest('.pin')) return;
+    globeEl.setPointerCapture(ev.pointerId); const [x, y] = rel(ev); ptrs.set(ev.pointerId, { x, y });
+    lastTouch = performance.now(); anim = null; vyaw = vpitch = 0;
+    if (ptrs.size === 1) drag = { x, y, x0: x, y0: y, t0: performance.now(), moved: 0, lt: performance.now() };
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: zoom }; drag = null; }
+    globeEl.classList.add('dragging');
+  });
+  globeEl.addEventListener('pointermove', ev => {
+    const [x, y] = rel(ev);
+    if (ptrs.has(ev.pointerId)) {
+      ptrs.set(ev.pointerId, { x, y }); lastTouch = performance.now();
+      if (pinch && ptrs.size >= 2) { const [a, b] = [...ptrs.values()]; zoom = clamp(pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / Math.max(10, pinch.d), 1, 7); }
+      else if (drag) {
+        const dx = x - drag.x, dy = y - drag.y, now = performance.now(), dt = Math.max(1, now - drag.lt);
+        yaw -= dx / radius; pitch = clamp(pitch + dy / radius, -1.35, 1.35);
+        vyaw = -dx / radius / dt * 16; vpitch = dy / radius / dt * 16;
+        drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = x; drag.y = y; drag.lt = now;
+        if (drag.moved > 8) { $('#pin').hidden = true; $('#tip').hidden = true; }
+      }
+    }
+    if (ev.pointerType === 'mouse' || selPower) {
+      hoverTile = ready ? pickTile(x, y) : -1;
+      const tip = $('#tip');
+      if (ev.pointerType === 'mouse' && hoverTile >= 0 && !ptrs.size) { tip.innerHTML = tipHTML(hoverTile); tip.hidden = false; let tx = x + 14, ty = y + 14; if (tx + 250 > cw) tx -= 270; if (ty + 90 > ch) ty -= 100; tip.style.left = tx + 'px'; tip.style.top = ty + 'px'; }
+      else tip.hidden = true;
+    }
+  });
+  function endPtr(ev) {
+    if (!ptrs.has(ev.pointerId)) return;
+    const [x, y] = rel(ev); ptrs.delete(ev.pointerId);
+    if (drag && drag.moved < 8 && performance.now() - drag.t0 < 600 && ev.type === 'pointerup') tap(x, y);
+    if (performance.now() - (drag ? drag.lt : 0) > 80) { vyaw = vpitch = 0; }
+    if (ptrs.size < 2) pinch = null;
+    if (!ptrs.size) { drag = null; globeEl.classList.remove('dragging'); }
+    else if (ptrs.size === 1) { const [p] = [...ptrs.values()]; drag = { x: p.x, y: p.y, t0: 0, moved: 99, lt: performance.now() }; }
+  }
+  globeEl.addEventListener('pointerup', endPtr); globeEl.addEventListener('pointercancel', endPtr);
+  globeEl.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') { $('#tip').hidden = true; if (!selPower) hoverTile = -1; } });
+  globeEl.addEventListener('wheel', ev => { ev.preventDefault(); zoom = clamp(zoom * Math.exp(-ev.deltaY * 0.0015), 1, 7); lastTouch = performance.now(); }, { passive: false });
+  $('#zin').addEventListener('click', () => { anim = { y0: yaw, p0: pitch, z0: zoom, y1: yaw, p1: pitch, z1: clamp(zoom * 1.6, 1, 7), t0: performance.now(), d: 350 }; lastTouch = performance.now(); });
+  $('#zout').addEventListener('click', () => { anim = { y0: yaw, p0: pitch, z0: zoom, y1: yaw, p1: pitch, z1: clamp(zoom / 1.6, 1, 7), t0: performance.now(), d: 350 }; lastTouch = performance.now(); });
+  $('#spin').addEventListener('click', e => { spin = !spin; e.currentTarget.setAttribute('aria-pressed', spin); });
+
+  function tipHTML(i) {
+    const s = sp[i] ? S.species[sp[i]] : null, c = own[i] ? S.cultures[own[i]] : null, ct = cityAt(i);
+    let h = '<div class="t1">' + esc(ct ? ct.name + ' · ' + TIERS[ct.tier] : c ? Nation(c) : BIOME[biome[i]].n) + '</div>';
+    h += '<div class="t2">' + BIOME[biome[i]].n + ' · ' + Math.round(temp[i] * 65 - 30) + '°C' + (c && ct ? ' · ' + esc(c.name) : '') + '</div>';
+    if (s) h += '<div class="t2">' + esc(s.name) + '</div>';
+    return h;
+  }
+  function tap(x, y) {
+    if (!ready || busy) return; const i = pickTile(x, y); if (i < 0) { $('#pin').hidden = true; return; }
+    if (selPower) {
+      const res = usePower(selPower, i % W, (i / W) | 0, Date.now());
+      if (!res.ok) { toast(res.msg); return; }
+      toast(res.msg); texDirty = true; queueSave(2500); renderDock(); renderHeader(); renderPanel(false);
+      if (['warm', 'cool', 'inspire', 'prophet', 'plague', 'bounty'].includes(selPower)) setPower(null);
+      return;
+    }
+    inspectTile = i; showPin(i);
+  }
+  function showPin(i) {
+    const s = sp[i] ? S.species[sp[i]] : null, c = own[i] ? S.cultures[own[i]] : null, ct = cityAt(i);
+    let h = '<div class="p1">' + esc(ct ? ct.name + ', ' + TIERS[ct.tier].toLowerCase() + ' of the ' + (c ? c.name : 'lost') : c ? 'Lands of ' + nation(c) : BIOME[biome[i]].n) + '</div><button class="x" id="pinx" aria-label="Close">&times;</button>';
+    if (ct) h += '<div class="p2">About ' + fmtPop(popOf(ct)) + ' people · founded ' + fullDate(ct.bornAt || S.created) + (ct.cap ? ' · capital' : '') + '</div>';
+    else if (c) h += '<div class="p2">' + esc(Nation(c)) + ' · ' + AGES[ageOf(c.tech)] + ' · ' + fmtPop(c.pop) + ' people</div>';
+    h += '<div class="p2">' + BIOME[biome[i]].n + ' · ' + Math.round(temp[i] * 65 - 30) + '°C' + (s ? ' · home of <i>' + esc(s.name) + '</i>' : '') + '</div>' + (c ? '<div class="p2"><a href="#" data-pc="' + c.id + '" style="color:var(--gold)">See statistics for the ' + esc(c.name) + '</a></div>' : '');
+    const pin = $('#pin'); pin.innerHTML = h; pin.hidden = false;
+  }
+  $('#pin').addEventListener('click', e => { if (e.target.id === 'pinx') { $('#pin').hidden = true; } const m = e.target.closest('[data-pc]'); if (m) { e.preventDefault(); statSel = +m.dataset.pc; setView('stats'); } });
+
+  // ---------- header, dock ----------
+  function renderHeader() {
+    $('#era').textContent = eraName(); $('#date').textContent = dateLabel();
+    $('#wname').textContent = S.name; $('#spirit').textContent = Math.floor(energyNow(Date.now()));
+    const lv = $('#live'); lv.classList.toggle('ff', speed > 1); lv.lastChild.textContent = speed > 1 ? (speed === 60 ? 'Fast forward' : 'Very fast') : 'Live';
+  }
+  function setPower(k) {
+    selPower = k; globeEl.classList.toggle('aiming', !!k);
+    const lg = $('#legend'); lg.classList.toggle('aim', !!k); lg.textContent = k ? 'Tap the globe to use ' + POWERS[k].n : 'Drag to spin · pinch to zoom · tap a place';
+    if (k) { $('#pin').hidden = true; spinHold = true; } else spinHold = false;
+    renderDock();
+  }
+  let spinHold = false;
+  function renderDock() {
+    $('#pgroups').innerHTML = GROUPS.map(g => '<button class="tab" role="tab" data-g="' + g + '" aria-selected="' + (g === group) + '">' + g + '</button>').join('');
+    const e = energyNow(Date.now());
+    $('#powers').innerHTML = Object.entries(POWERS).filter(([k, p]) => p.g === group).map(([k, p]) =>
+      '<button class="pw' + (e < p.cost ? ' poor' : '') + '" data-p="' + k + '" aria-pressed="' + (selPower === k) + '"><svg viewBox="0 0 20 20">' + ICONS[k] + '</svg><span class="pn">' + p.n + '</span><span class="pc">' + p.cost + ' spirit</span></button>').join('');
+    const d = $('#pdesc');
+    if (selPower) { const P = POWERS[selPower]; d.innerHTML = '<strong>' + P.n + '.</strong> ' + esc(P.d) + ' <span class="go">Tap the globe.</span> <button class="ghost" id="cancelp">Cancel</button>'; }
+    else d.textContent = 'Choose a power, then tap the globe to use it. Everything you do is written into the History.';
+  }
+  $('#pgroups').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (b) { group = b.dataset.g; renderDock(); } });
+  $('#powers').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b) return; const k = b.dataset.p; setPower(selPower === k ? null : k); if (selPower && window.innerWidth < 1020) globeEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#pdesc').addEventListener('click', e => { if (e.target.id === 'cancelp') setPower(null); });
+  $('#speed').addEventListener('click', e => {
+    const b = e.target.closest('[data-s]'); if (!b) return; speed = +b.dataset.s; for (const x of $('#speed').children) x.setAttribute('aria-pressed', x === b);
+    if (speed > 1) toast(speed === 60 ? 'Fast forward: one hour of history passes every minute.' : 'Very fast: one day of history passes every minute.'); else toast('Back to live. Your world now moves in real time.');
+    renderHeader();
+  });
+  $('#modes').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; for (const x of $('#modes').children) x.setAttribute('aria-pressed', x === b); texDirty = true; });
+
+  // ---------- views: world, history, statistics, help ----------
+  let view = 'globe', ptab = 'hist', statSel = 0, chartHover = false;
+  const mobile = () => window.innerWidth <= 1020;
+  function setView(v) {
+    if (v === 'globe') { view = 'globe'; }
+    else { view = v; ptab = v; }
+    $('#app').dataset.view = view;
+    for (const b of $('#bnav').children) b.setAttribute('aria-current', b.dataset.v === view ? 'page' : 'false');
+    for (const b of $('#ptabs').children) b.setAttribute('aria-selected', b.dataset.v === ptab);
+    if (view === 'globe') requestAnimationFrame(resize);
+    renderPanel(true);
+    if (mobile()) window.scrollTo(0, 0);
+  }
+  $('#bnav').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setView(b.dataset.v); });
+  $('#ptabs').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) setView(b.dataset.v); });
+  function showOnGlobe(i, z) { if (mobile()) setView('globe'); focusTile(i, z); }
+  $('#pbody').addEventListener('click', e => {
+    const f = e.target.closest('[data-f]'); if (f) { hfilter = f.dataset.f; renderPanel(true); return; }
+    const cs = e.target.closest('[data-cs]'); if (cs) { statSel = +cs.dataset.cs; renderPanel(true); $('#pbody').scrollTop = 0; if (mobile()) window.scrollTo(0, 0); return; }
+    if (e.target.closest('#sback')) { statSel = 0; renderPanel(true); return; }
+    const g = e.target.closest('[data-go]'); if (g) { const c = S.cultures[g.dataset.go]; const cap = c && capitalOf(c); if (cap) { hl = { t: 'c', id: c.id, until: performance.now() + 4000 }; texDirty = true; showOnGlobe(cap.i, 2.4); } return; }
+    const b = e.target.closest('[data-hl]'); if (!b) return;
+    const [t, id] = b.dataset.hl.split(':'); hl = { t, id: +id, until: performance.now() + 4000 }; texDirty = true;
+    if (t === 's') for (let i = 0; i < N; i++) if (sp[i] === +id) { showOnGlobe(i, Math.max(zoom, 1.4)); break; }
+  });
+  let lastBody = '', lastLogKey = '', panelAt = 0;
+  function nextDiscovery() {
+    let lead = null; for (const c of Object.values(S.cultures)) if (!lead || c.tech > lead.tech || (c.tech === lead.tech && c.rp > lead.rp)) lead = c;
+    if (!lead || lead.tech >= TECHS.length) return null;
+    const rate = lead.lastRate || 1, left = Math.max(0, techCost(lead.tech) - lead.rp) / rate * TICK_CIV;
+    let nextAge = null; for (let k = lead.tech; k < TECHS.length; k++) if (TECHS[k][2] === 'age') { nextAge = k; break; }
+    let ageLeft = null; if (nextAge != null) { ageLeft = left; for (let k = lead.tech + 1; k <= nextAge; k++) ageLeft += techCost(k) / rate * TICK_CIV; }
+    return { lead, tech: TECHS[lead.tech][0], left, nextAge: nextAge != null ? AGES[ageOf(nextAge + 1)] : null, ageLeft };
+  }
+  function firstLog(prefix) { const l = S.log.find(x => x.x.startsWith(prefix)); return l ? fullDate(l.at) : ''; }
+  function moodChips(c) { return paceNotes(c).map(([n, v, up]) => '<span class="mood ' + (up ? 'up' : 'down') + '">' + esc(n) + ' ' + v + '</span>').join(''); }
+
+  // ---------- charts (hand-built SVG with a hover crosshair) ----------
+  const CH = {};
+  function niceDate(at, span) { const d = new Date(at); return span < 2 * 86400e3 ? tm(at) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
+  function chart(id, title, sub, xs, series, o) {
+    o = o || {};
+    const pbd = $('#pbody'), cs_ = getComputedStyle(pbd), w = Math.max(240, Math.min((pbd.clientWidth || 340) - parseFloat(cs_.paddingLeft) - parseFloat(cs_.paddingRight) - 4, 900)), h = o.h || 170, pl = 46, pr = 12, pt = 10, pb = 24;
+    const all = []; series.forEach(s => s.v.forEach(v => { if (v != null && (!o.log || v > 0)) all.push(v); }));
+    let head = '<div class="chart" data-ch="' + id + '"><div class="ttl">' + esc(title) + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '');
+    if (series.length > 1) head += '<div class="lg">' + series.map(s => '<span><i style="background:' + s.c + '"></i>' + esc(s.n) + '</span>').join('') + '</div>';
+    if (xs.length < 2 || !all.length) return head + '<p class="empty">Not enough history yet. Come back in a little while.</p></div>';
+    let lo = Math.min(...all), hi = Math.max(...all);
+    let ty, ticks = [];
+    if (o.log) {
+      lo = Math.floor(Math.log10(Math.max(1, lo))); hi = Math.max(lo + 1, Math.ceil(Math.log10(hi)));
+      const st = Math.ceil((hi - lo) / 4); for (let k = lo; k <= hi; k += st) ticks.push(Math.pow(10, k));
+      ty = v => pt + (h - pt - pb) * (1 - (Math.log10(Math.max(v, Math.pow(10, lo))) - lo) / (hi - lo));
+    } else {
+      lo = 0; const step = Math.pow(10, Math.floor(Math.log10(Math.max(1, hi)))) * (hi / Math.pow(10, Math.floor(Math.log10(Math.max(1, hi)))) > 5 ? 2 : hi / Math.pow(10, Math.floor(Math.log10(Math.max(1, hi)))) > 2 ? 1 : 0.5);
+      hi = Math.max(step, Math.ceil(hi / step) * step); for (let v = 0; v <= hi + 1e-9; v += step) ticks.push(v);
+      ty = v => pt + (h - pt - pb) * (1 - (v - lo) / (hi - lo));
+    }
+    const x0 = xs[0], x1 = xs[xs.length - 1], tx = t => pl + (w - pl - pr) * (t - x0) / Math.max(1, x1 - x0);
+    const fmt = o.fmt || (v => shortPop(v)), tfmt = o.log ? (v => v >= 1e9 ? v / 1e9 + 'B' : v >= 1e6 ? v / 1e6 + 'M' : v >= 1e3 ? v / 1e3 + 'k' : v + '') : fmt;
+    let g = '';
+    for (const v of ticks) { const y = ty(v).toFixed(1); g += '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/><text x="' + (pl - 8) + '" y="' + y + '" dy="4" text-anchor="end" font-size="11" fill="var(--faint)" font-family="IBM Plex Mono, monospace">' + tfmt(v) + '</text>'; }
+    for (const k of [0, 0.5, 1]) { const t = x0 + (x1 - x0) * k; g += '<text x="' + tx(t).toFixed(1) + '" y="' + (h - 6) + '" text-anchor="' + (k === 0 ? 'start' : k === 1 ? 'end' : 'middle') + '" font-size="11" fill="var(--faint)" font-family="IBM Plex Mono, monospace">' + niceDate(t, x1 - x0) + '</text>'; }
+    for (const s of series) {
+      let d = '', pen = false, lastP = null;
+      s.v.forEach((v, k) => { if (v == null || (o.log && v <= 0)) { pen = false; return; } const X = tx(xs[k]).toFixed(1), Y = ty(v).toFixed(1); d += (pen ? 'L' : 'M') + X + ' ' + Y; pen = true; lastP = [X, Y]; });
+      if (d) g += '<path d="' + d + '" fill="none" stroke="' + s.c + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      if (lastP && s.v[s.v.length - 1] != null) g += '<circle cx="' + lastP[0] + '" cy="' + lastP[1] + '" r="4" fill="' + s.c + '" stroke="var(--panel)" stroke-width="2"/>';
+    }
+    g += '<line class="cx" x1="0" x2="0" y1="' + pt + '" y2="' + (h - pb) + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>';
+    CH[id] = { xs, series, tx, pl, pr, w, fmt };
+    return head + '<svg width="' + w + '" height="' + h + '" role="img" aria-label="' + esc(title) + '">' + g + '</svg><div class="ctip" hidden></div></div>';
+  }
+  function chartMove(ev) {
+    const el = ev.target.closest('.chart'); if (!el || !CH[el.dataset.ch]) return;
+    const C = CH[el.dataset.ch], svg = el.querySelector('svg'); if (!svg) return;
+    const r = svg.getBoundingClientRect(), x = ev.clientX - r.left; let best = 0, bd = 1e9;
+    C.xs.forEach((t, k) => { const d = Math.abs(C.tx(t) - x); if (d < bd) { bd = d; best = k; } });
+    const X = C.tx(C.xs[best]), ln = svg.querySelector('.cx'); ln.setAttribute('x1', X); ln.setAttribute('x2', X); ln.setAttribute('visibility', 'visible');
+    const tip = el.querySelector('.ctip'); const rows = C.series.map(s => [s, s.v[best]]).filter(([s, v]) => v != null).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    tip.innerHTML = '<b>' + fullDate(C.xs[best]) + '</b>' + rows.map(([s, v]) => '<div><span>' + esc(s.n) + '</span>' + C.fmt(v) + '</div>').join('');
+    tip.hidden = false; const off = svg.offsetTop; let L = X + 12; if (L + 170 > C.w) L = X - 170; tip.style.left = Math.max(0, L) + 'px'; tip.style.top = (off + 8) + 'px';
+  }
+  function chartLeave(ev) { const el = ev.target.closest('.chart'); if (!el) return; const ln = el.querySelector('.cx'); if (ln) ln.setAttribute('visibility', 'hidden'); const tip = el.querySelector('.ctip'); if (tip) tip.hidden = true; }
+  $('#pbody').addEventListener('pointermove', e => { if (e.target.closest('.chart')) { chartHover = true; chartMove(e); } else if (chartHover) { chartHover = false; document.querySelectorAll('.chart').forEach(el => chartLeave({ target: el })); } });
+  $('#pbody').addEventListener('pointerleave', () => { chartHover = false; document.querySelectorAll('.chart').forEach(el => chartLeave({ target: el })); });
+
+  function renderPanel(force) {
+    const body = $('#pbody'); let h = '';
+    if (mobile() && view === 'globe') return;
+    if (ptab === 'hist') h = histHTML();
+    else if (ptab === 'stats') h = statSel && S.cultures[statSel] ? nationHTML(S.cultures[statSel]) : statsHTML();
+    else h = helpHTML();
+    if (force || h !== lastBody) { const st = body.scrollTop; body.innerHTML = h; lastBody = h; if (!force) body.scrollTop = st; }
+  }
+  function histHTML() {
+    let h = '<div class="sec">Ages of your world</div><div class="ages">';
+    h += '<div class="age"><b>World created</b><span>' + fullDate(S.created) + '</span></div>';
+    if (S.firsts.land) h += '<div class="age"><b>Life on land</b><span>' + esc(firstLog('Life conquered') || '') + '</span></div>';
+    for (const a of S.ages) h += '<div class="age"><b>' + AGES[a.a] + '</b><span>' + fullDate(a.at) + ' · Year ' + (a.y + 1).toLocaleString('en-US') + ' · led by the ' + esc(a.by) + '</span></div>';
+    const nd = S.civStart != null ? nextDiscovery() : null;
+    if (nd) { const notes = paceNotes(nd.lead); h += '<div class="age next"><b>Next: ' + esc(nd.tech) + '</b><span>The ' + esc(nd.lead.name) + ' should discover it in ' + fmtIn(nd.left) + (nd.nextAge && nd.ageLeft ? '. ' + nd.nextAge + ' in ' + fmtIn(nd.ageLeft) : '') + '. Wars, plagues and golden ages change this.</span>' + (notes.length ? '<div class="chips">' + moodChips(nd.lead) + '</div>' : '') + '</div>'; }
+    else if (S.civStart == null) h += '<div class="age next"><b>Next: the first people</b><span>' + (S.firsts.tools ? 'Clever apes already use stones as tools. A mind could wake any time now.' : 'Waiting for a land creature to grow clever enough.') + '</span></div>';
+    h += '</div><div class="filters">' + FILTERS.map(([k, l]) => '<button class="flt" data-f="' + k + '" aria-pressed="' + (hfilter === k) + '">' + l + '</button>').join('') + '</div>';
+    const kinds = FMAP[hfilter], items = S.log.filter(l => !kinds || kinds.includes(l.k)).slice(-220).reverse();
+    if (!items.length) h += '<p class="empty">' + (hfilter === 'you' ? 'You have not used any powers yet. Everything you do will be listed here with the time you did it.' : 'Nothing of this kind has happened yet.') + '</p>';
+    let day = ''; h += '<ul class="log">';
+    for (const l of items) {
+      const dl = dayLabel(l.at); if (dl !== day) { day = dl; h += '</ul><div class="dayhead">' + dl + '</div><ul class="log">'; }
+      const col = KIND[l.k] || '#888';
+      h += '<li class="' + (l.k === 'big' ? 'big ' : '') + (l.k === 'you' ? 'you ' : '') + (Date.now() - l.at < 4000 ? 'fresh' : '') + '"><span class="tm">' + tm(l.at) + '</span><div><div class="when"><span class="kd" style="color:' + col + ';background:' + col + '22">' + KLABEL[l.k] + '</span>' + esc(l.d) + '</div><div class="what">' + esc(l.x) + '</div></div></li>';
+    }
+    return h + '</ul>';
+  }
+  const tierWord = (n, k) => n + ' ' + (n === 1 ? TIERS[k].toLowerCase() : ['camps', 'villages', 'towns', 'cities', 'metropolises'][k]);
+  const TIERCOL = ['#7d6a52', '#b39568', '#d9c08a', '#f0dfb8', '#fff6e2'];
+  function statsHTML() {
+    const cs = Object.values(S.cultures).sort((a, b) => b.pop - a.pop), Z = S.ser || { t: [], pop: [], sp: [], set: [], c: {}, nm: {} };
+    const tot = cs.reduce((a, c) => a + c.pop, 0), tiers = [0, 0, 0, 0, 0]; for (const x of S.cities) tiers[x.tier]++;
+    const days = Math.max(1, Math.floor((Date.now() - S.created) / 86400e3) + 1);
+    let h = '<div class="census"><div class="stat"><b>' + shortPop(tot) + '</b><span>people</span></div><div class="stat"><b>' + cs.length + '</b><span>nations</span></div><div class="stat"><b>' + S.cities.length + '</b><span>settlements</span></div>' +
+      '<div class="stat"><b>' + (S.spCount || 0) + '</b><span>species alive</span></div><div class="stat"><b>' + (S.stats.wars || 0) + '</b><span>wars fought</span></div><div class="stat"><b>' + S.wonders.length + '</b><span>wonders</span></div></div>';
+    h += '<p class="small" style="margin:0 0 4px">Day ' + days + ' of ' + esc(S.name) + ' · ' + esc(dateLabel()) + ' · ' + esc(eraName()) + '</p>';
+    if (S.civStart != null) {
+      h += chart('wpop', 'World population', 'All peoples together, on a scale where each line is ten times the one below', Z.t, [{ n: 'World', c: '#e9b54d', v: Z.pop.map(decP) }], { log: true });
+      const top = cs.slice(0, 6);
+      h += chart('npop', 'Population by nation', 'The six largest nations today', Z.t, top.map(c => ({ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: (Z.c[c.id] || []).map(v => v ? decP(v) : null) })), { log: true });
+      h += '<div class="sec">Nations · tap for details</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Nation</th><th class="n">People</th><th class="n">Towns</th><th class="n">Land</th></tr></thead><tbody>' +
+        cs.map(c => '<tr data-cs="' + c.id + '"><td><span class="sw" style="display:inline-block;margin:0 7px -1px 0;background:' + css(culRGB(c)) + '"></span><b>' + esc(Nation(c)) + '</b><div class="meta">' + AGES[ageOf(c.tech)] + '</div>' + (paceNotes(c).length ? '<div class="chips">' + moodChips(c) + '</div>' : '') + '</td><td class="n">' + shortPop(c.pop) + '</td><td class="n">' + (c.cities || 0) + '</td><td class="n">' + (c.tiles / N * 100).toFixed(1) + '%</td></tr>').join('') + '</tbody></table></div>';
+      const ts = tiers.reduce((a, b) => a + b, 0) || 1;
+      h += '<div class="sec">Settlements by size</div><div class="tierbar">' + tiers.map((n, k) => n ? '<i style="flex:' + n + ';background:' + TIERCOL[k] + '"></i>' : '').join('') + '</div><div class="tierlg">' + tiers.map((n, k) => '<span><i style="background:' + TIERCOL[k] + '"></i>' + tierWord(n, k) + '</span>').join('') + '</div>';
+      h += chart('nset', 'Settlements over time', '', Z.t, [{ n: 'Settlements', c: '#dac28c', v: Z.set }], { fmt: v => Math.round(v) + '' , h: 140 });
+    } else h += '<p class="empty" style="margin-top:10px">No people yet, so there is no population to count. These charts fill in once the first tribe lights a fire. For now, here is how life is doing.</p>';
+    h += chart('sp', 'Species alive', 'How many kinds of creature live in the world', Z.t, [{ n: 'Species', c: '#72d4a6', v: Z.sp }], { fmt: v => Math.round(v) + '', h: 140 });
+    const life = Object.values(S.species).sort((a, b) => b.tiles - a.tiles).slice(0, 8);
+    h += '<div class="sec">Most widespread creatures · tap to find</div>' + life.map(s => '<button class="row" data-hl="s:' + s.id + '"><span class="sw" style="background:' + css(spRGB(s)) + '"></span><div><div class="nm"><i>' + esc(s.name) + '</i></div><div class="meta">' + HAB[s.hab] + ' · ' + SIZE[s.size] + ' · ' + (s.diet ? 'Hunter' : 'Plant eater') + (s.awoke ? ' · <span style="color:var(--gold)">became a people</span>' : '') + '</div></div><span class="num">' + (s.tiles / N * 100).toFixed(1) + '%</span></button>').join('');
+    return h;
+  }
+  function nationHTML(c) {
+    const Z = S.ser || { t: [], c: {} }, cap = capitalOf(c), tiers = [0, 0, 0, 0, 0]; for (const x of S.cities) if (x.cul === c.id) tiers[x.tier]++;
+    const nx = c.tech < TECHS.length ? TECHS[c.tech][0] : null, foe = c.war && S.cultures[c.war];
+    let h = '<div class="vhead"><button class="back" id="sback">&larr; All nations</button></div>';
+    h += '<div style="display:flex;gap:10px;align-items:center"><span class="sw" style="width:16px;height:16px;margin:0;background:' + css(culRGB(c)) + '"></span><h2 style="margin:0;font:800 20px/1.2 var(--f-display)">' + esc(Nation(c)) + '</h2></div>';
+    if (paceNotes(c).length) h += '<div class="chips" style="margin-top:8px">' + moodChips(c) + '</div>';
+    h += '<div class="rowbtns" style="margin:12px 0"><button class="ghost" data-go="' + c.id + '">Show on globe</button></div>';
+    h += '<dl class="kv"><dt>Population</dt><dd>' + fmtPop(c.pop) + (c.peak > c.pop * 1.05 ? ' (peak ' + fmtPop(c.peak) + ')' : '') + '</dd><dt>Founded</dt><dd>' + fullDate(c.bornAt || S.created) + '</dd><dt>Government</dt><dd>' + esc(c.gov || 'Tribe') + '</dd><dt>Age</dt><dd>' + AGES[ageOf(c.tech)] + '</dd>' +
+      '<dt>Capital</dt><dd>' + (cap ? esc(cap.name) + ' · ' + TIERS[cap.tier].toLowerCase() : '-') + '</dd><dt>Settlements</dt><dd>' + (c.cities || 0) + (tiers.some(Boolean) ? ' (' + tiers.map((n, k) => n ? tierWord(n, k) : '').filter(Boolean).join(', ') + ')' : '') + '</dd>' +
+      '<dt>Land</dt><dd>' + (c.tiles / N * 100).toFixed(1) + '% of the world</dd><dt>Faith</dt><dd>' + esc(c.faithName) + (c.faith > 0.6 ? ', devout' : '') + '</dd><dt>Discoveries</dt><dd>' + c.tech + ' of ' + TECHS.length + (nx ? ', next ' + nx.toLowerCase() : '') + '</dd>' +
+      '<dt>Wars fought</dt><dd>' + (c.wars || 0) + (foe ? ', now fighting ' + esc(nation(foe)) : '') + '</dd><dt>Wonders</dt><dd>' + (c.wonders || 0) + '</dd><dt>Geniuses</dt><dd>' + (c.geniuses || 0) + '</dd></dl>';
+    if (nx) { const left = Math.max(0, techCost(c.tech) - c.rp) / (c.lastRate || 1) * TICK_CIV; h += '<div class="bars" style="margin-top:12px"><span>' + esc(nx.toLowerCase()) + '</span><div class="bar"><i style="width:' + Math.min(100, c.rp / techCost(c.tech) * 100) + '%;background:var(--k-tech)"></i></div></div><p class="small" style="margin-top:4px">At the current pace, ' + fmtIn(left) + ' to go.</p>'; }
+    h += chart('cpop', 'Population over time', '', Z.t, [{ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: (Z.c[c.id] || []).map(v => v ? decP(v) : null) }], { log: true });
+    const mine = S.log.filter(l => l.x.includes(c.name)).slice(-10).reverse();
+    if (mine.length) h += '<div class="sec">Recent history</div><ul class="log">' + mine.map(l => '<li><span class="tm">' + tm(l.at) + '</span><div><div class="when"><span class="kd" style="color:' + (KIND[l.k] || '#888') + ';background:' + (KIND[l.k] || '#888') + '22">' + KLABEL[l.k] + '</span>' + dayLabel(l.at) + ' · ' + esc(l.d) + '</div><div class="what">' + esc(l.x) + '</div></div></li>').join('') + '</ul>';
+    return h;
+  }
+  function helpHTML() {
+    let h = '<div class="help"><h3>The idea</h3><p>Your world lives on its own. Life evolves for about half an hour, then clever apes become the first people. From there, history runs in <b>real time</b>, even when your phone is locked. Camps grow into villages, towns and cities, and tribes become kingdoms, empires and republics.</p><p>Reaching the Space Age takes <b>about six months</b>, but every world is different. Wars, plagues and dark ages slow a people down. Golden ages, geniuses and peaceful trade speed them up. So it can be closer to four or eight months.</p>';
+    h += '<h3>Moving around the globe</h3><ul><li><b>Drag</b> to spin the planet.</li><li><b>Pinch</b> (or the + and − buttons) to zoom. Zoom in to read the names of towns.</li><li><b>Tap a place</b> to see who lives there.</li><li>The <b>circular arrow</b> button turns slow automatic spinning on or off.</li><li><b>World, Nations, Life</b> at the top of the globe change the colours: real terrain, one colour per nation, or one colour per species.</li></ul>';
+    h += '<h3>Time</h3><ul><li><b>Live</b>: the world moves in real time. This is the normal way to play.</li><li><b>1 h/min</b> and <b>1 day/min</b> fast forward. Whatever happens during fast forward is permanent.</li><li>When you come back after a while, the game replays what you missed and shows a summary.</li></ul>';
+    h += '<h3>Your powers</h3><p>Pick a power under the globe, then tap the globe where you want it. Powers cost <b>spirit</b>, which refills by 3 every minute, up to 100. Everything you do is saved in History under <b>Your actions</b>.</p>';
+    for (const [k, p] of Object.entries(POWERS)) h += '<div class="pl"><svg viewBox="0 0 20 20">' + ICONS[k] + '</svg><div><b>' + p.n + '</b><br><span>' + esc(p.d) + '</span></div><em>' + p.cost + ' spirit</em></div>';
+    h += '<h3>Other screens</h3><ul><li><b>History</b>: every age, discovery, war and action with its date and time. Filter to see only what you want.</li><li><b>Statistics</b>: population charts for the whole world and each nation. Tap a nation for its own page.</li><li>Tap the <b>world name</b> at the top to rename it, hide clouds or start a new world.</li></ul></div>';
+    return h;
+  }
+
+  // ---------- ideas ----------
+  function pickHint() {
+    const o = [], cs = Object.values(S.cultures);
+    if (!S.firsts.multi) o.push('Life is still single cells. Try a Spark of life in a warm sea to speed up evolution.', 'Warm seas are the richest. Warm the world a little and see who thrives.');
+    else if (!S.firsts.land) o.push('Nothing lives on land yet. Raise land in a crowded shallow sea to give creatures new shores.', 'Rain turns deserts green. Fertile coasts help the first land creatures.');
+    else if (S.civStart == null) o.push('Land creatures are getting smarter. Open Nations to find the cleverest, then place a Monolith among them.', 'A meteor wipes out the old rulers and lets new species rise.', 'Switch to the Life view to see every species as its own colour.');
+    else {
+      o.push('Raise a new island far out at sea and see which people reach it first.', 'Whisper an idea to a small nation to help it catch up with its neighbours.', 'Spin the globe to the night side. Settlements glow there, from campfires to city lights.', 'Zoom in close to read the names of villages and towns.');
+      const war = S.wars[0]; if (war && S.cultures[war.a] && S.cultures[war.b]) o.push(Nation(S.cultures[war.a]) + ' and ' + nation(S.cultures[war.b]) + ' are at war. Send a prophet to calm one side, or let history decide.');
+      const big = cs.slice().sort((a, b) => b.tiles - a.tiles)[0]; if (big && big.tiles > N * 0.08) o.push(Nation(big) + ' rules a huge share of the world. An earthquake or plague would test it.');
+      if (cs.length === 1) o.push('Only one people exists. Sink a strait across their land and watch new nations form on each side.');
+      if (cs.some(c => c.pop / capOf(c) > 0.95)) o.push('Some peoples are running out of food. A Bountiful year or rain lets their villages grow.');
+    }
+    let t = pick(o); if (t === hintText && o.length > 1) t = pick(o);
+    hintText = t; $('#hint').textContent = t; hintAt = Date.now();
+  }
+
+  // ---------- saving ----------
+  function snapshotStr() { let str = serialize(Date.now()); if (str.length > 240000) { S.log = S.log.slice(-150); str = serialize(Date.now()); } return str; }
+  let saveTimer = 0;
+  function queueSave(ms) { clearTimeout(saveTimer); saveTimer = setTimeout(save, ms); }
+  async function save() {
+    if (!S || !ready || busy) return;
+    const str = snapshotStr();
+    try { localStorage.setItem(KEY, str); } catch (e) { }
+    if (!dbRef) return;
+    if (saving) { pendingSave = true; return; }
+    saving = true;
+    try { await dbRef.set({ v: 2, savedAt: S.savedAt, syncAt: S.syncAt, data: str }); } catch (e) { }
+    saving = false;
+    if (pendingSave) { pendingSave = false; save(); }
+  }
+  setInterval(save, 60000);
+  let hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); save(); }
+    else if (ready && !busy) { const gap = Date.now() - S.syncAt; if (gap > 5 * 60000) catchUp(true); }
+  });
+  window.addEventListener('pagehide', save);
+  async function connectStore() {
+    try {
+      if (!window.claude || !window.claude.use) return null;
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return null;
+      const id = await user.id(); if (!id) return null;
+      dbRef = db.doc('data/users/' + id + '/world');
+      const snap = await dbRef.get();
+      if (snap.exists) { const d = snap.data(); if (d && d.v === 2 && typeof d.data === 'string') return { savedAt: d.savedAt || 0, data: d.data }; }
+      return { savedAt: 0, data: null };
+    } catch (e) { return null; }
+  }
+
+  // ---------- time ----------
+  // The world is simulated up to S.syncAt. Live play advances it with the clock; when you come back, the gap is replayed.
+  function liveSteps(now) {
+    let n = 0;
+    while (now - S.syncAt >= tickMs() && n < 40) { const dt = tickMs(); STAMP = S.syncAt + dt; step(); S.syncAt += dt; n++; }
+    STAMP = 0; return n;
+  }
+  async function catchUp(show) {
+    const start = S.syncAt, total = Date.now() - start; if (total < tickMs()) return;
+    busy = true;
+    const mark = S.log.length ? S.log[S.log.length - 1] : null, eraBefore = eraName(), bornBefore = S.stats.born, citiesBefore = S.cities.length;
+    if (show) openModal('<div class="kicker">Welcome back</div><h2>Your world kept living</h2><p>You were away for ' + fmtDur(total) + '. Replaying everything that happened…</p><div class="prog"><i id="pg"></i></div><p class="small" id="pgt"></p>');
+    const t0 = performance.now(), BUDGET = 12000; let steps = 0;
+    while (Date.now() - S.syncAt >= tickMs()) {
+      const c0 = performance.now();
+      for (let k = 0; k < 800 && Date.now() - S.syncAt >= tickMs() * S.fast; k++) { const dt = tickMs() * S.fast; STAMP = S.syncAt + dt; step(); S.syncAt += dt; steps++; }
+      if (Date.now() - S.syncAt < tickMs() * S.fast) { S.fast = 1; break; }
+      // keep the replay within the time budget: if we are behind, let each step stand for a little more time
+      const spent = performance.now() - t0, perStep = (performance.now() - c0) / 800, left = Date.now() - S.syncAt;
+      const afford = Math.max(200, (BUDGET - spent) / Math.max(perStep, 0.005));
+      const need = left / tickMs();
+      S.fast = need > afford ? Math.min(400, need / afford) : 1;
+      const pg = document.getElementById('pg'); if (pg) pg.style.width = ((S.syncAt - start) / total * 100).toFixed(1) + '%';
+      const pt = document.getElementById('pgt'); if (pt) pt.textContent = 'Replaying ' + new Date(S.syncAt).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' + dateLabel();
+      await sleep(0);
+    }
+    STAMP = 0; S.fast = 1; S.syncAt = Math.min(S.syncAt, Date.now()); busy = false; texDirty = true;
+    renderAll();
+    if (!show) { save(); return; }
+    const idx = mark ? S.log.lastIndexOf(mark) : -1;
+    const fresh = idx >= 0 ? S.log.slice(idx + 1) : S.log.slice();
+    const rank = { big: 0, you: 1, tech: 2, nation: 3, wonder: 4, war: 5, culture: 6, city: 7, death: 8, life: 9, peace: 10, nature: 11 };
+    const top = fresh.slice().sort((a, b) => (rank[a.k] - rank[b.k]) || (b.at - a.at)).slice(0, 9).sort((a, b) => a.at - b.at);
+    const eraAfter = eraName();
+    openModal('<div class="kicker">While you were away · ' + fmtDur(total) + '</div><h2>' + (eraAfter !== eraBefore ? 'Your world entered the ' + esc(eraAfter) : esc(S.name) + ' lived on') + '</h2>' +
+      '<p>' + fresh.length + ' events were written into history' + (S.cities.length > citiesBefore ? ', ' + (S.cities.length - citiesBefore) + ' new settlements were founded' : '') + (S.stats.born > bornBefore ? ', and ' + (S.stats.born - bornBefore).toLocaleString('en-US') + ' new species appeared' : '') + '. It is now ' + esc(dateLabel()) + '.</p>' +
+      (top.length ? '<ul class="away">' + top.map(l => '<li><span class="dot" style="background:' + (KIND[l.k] || '#888') + '"></span><span>' + esc(l.x) + '<small>' + dayLabel(l.at) + ', ' + tm(l.at) + ' · ' + esc(l.d) + '</small></span></li>').join('') + '</ul>' : '<p>A quiet time. Nothing remarkable made it into the history.</p>') +
+      '<div class="rowbtns"><button class="btn" id="mclose">Return to your world</button><button class="ghost" id="mhist">Open full history</button></div>');
+    save();
+  }
+
+  // ---------- modal ----------
+  function openModal(html) { $('#mcard').innerHTML = html; $('#modal').hidden = false; }
+  function closeModal() { $('#modal').hidden = true; }
+  $('#modal').addEventListener('click', e => {
+    const id = e.target.id;
+    if ((id === 'mclose' || e.target === $('#modal')) && !busy) closeModal();
+    if (id === 'mhist') { closeModal(); setView('hist'); }
+    if (id === 'mhelp') { closeModal(); setView('help'); }
+    if (id === 'rename') { const v = ($('#wn').value || '').trim().slice(0, 40); if (v) { S.name = v; renderHeader(); save(); } closeModal(); }
+    if (id === 'clouds') { clouds = !clouds; e.target.textContent = clouds ? 'Hide clouds' : 'Show clouds'; }
+    if (id === 'reset1') { e.target.hidden = true; $('#reset2').hidden = false; $('#resetnote').hidden = false; }
+    if (id === 'reset2') { closeModal(); const nm = ($('#wn').value || '').trim().slice(0, 40) || randomName(); startNew(nm); }
+  });
+  $('#wname').addEventListener('click', () => {
+    openModal('<div class="kicker">Your world</div><h2>' + esc(S.name) + '</h2><p>Created ' + fullDate(S.created) + '. It is now ' + esc(dateLabel()) + ', in the ' + esc(eraName()) + '. You have used your powers ' + (S.stats.actions || 0) + ' times.</p>' +
+      '<div class="field"><label for="wn">World name</label><input id="wn" maxlength="40" value="' + esc(S.name) + '"></div>' +
+      '<div class="rowbtns"><button class="btn" id="rename">Save name</button><button class="ghost" id="clouds">' + (clouds ? 'Hide clouds' : 'Show clouds') + '</button><button class="ghost" id="mclose">Close</button></div>' +
+      '<div class="rowbtns" style="border-top:1px solid var(--line);padding-top:14px"><button class="ghost" id="reset1">Start a new world…</button><button class="btn danger" id="reset2" hidden>Erase this world and start over</button></div><p class="small" id="resetnote" hidden>This cannot be undone. The new world takes the name in the box above.</p>');
+  });
+  function randomName() { return pick(['Aster', 'Veloria', 'Thalassa', 'Orun', 'Mireth', 'Caldera', 'Ysolde', 'Pelagon', 'Ember', 'Nerith', 'Anatolia', 'Tisza']) + ' ' + pick(['Prime', 'II', 'Minor', 'Reach', 'Garden', 'Major']); }
+  function startNew(nm, note) {
+    newWorld((Math.random() * 1e9) | 0, nm, Date.now()); S.syncAt = Date.now();
+    inspectTile = -1; $('#pin').hidden = true; lastBody = ''; texDirty = true; ready = true; renderAll(); save();
+    openModal('<div class="kicker">A world is born</div><h2>Welcome to ' + esc(S.name) + '</h2>' + (note ? '<p style="color:var(--gold)">' + note + '</p>' : '') +
+      '<p>Life has just begun as a few cells in a warm sea. In about half an hour of real time they will evolve into clever apes, and a band of them will light the first fire.</p>' +
+      '<p>From then on your world runs in real time, even while your phone is locked. Camps become villages, villages become towns and cities, tribes become kingdoms and republics with borders you can see from space. Reaching the Space Age takes about six months.</p>' +
+      '<p>Everything that happens, and everything you do, is written into the History with its date and time.</p>' +
+      '<div class="rowbtns"><button class="btn" id="mclose">Watch life begin</button><button class="ghost" id="mhelp">How to play</button></div>');
+  }
+
+  // ---------- loop ----------
+  function renderAll() { renderHeader(); renderDock(); renderPanel(true); pickHint(); }
+  let last = performance.now(), acc = 0, uiAt = 0;
+  function frame(t) {
+    const dt = Math.min(t - last, 250); last = t;
+    if (ready && !busy && S) {
+      const now = Date.now();
+      if (speed === 1) { if (now - S.syncAt > 5 * 60000) catchUp(true); else if (liveSteps(now)) texDirty = true; }
+      else {
+        acc += dt * speed; let n = 0;
+        while (acc >= tickMs() && n < 300) { acc -= tickMs(); step(); n++; }
+        if (acc > tickMs() * 300) acc = 0;
+        S.syncAt = now; if (n) texDirty = true;
+      }
+    }
+    if (anim) { const k = clamp((t - anim.t0) / anim.d, 0, 1), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; yaw = anim.y0 + (anim.y1 - anim.y0) * e; pitch = anim.p0 + (anim.p1 - anim.p0) * e; zoom = anim.z0 + (anim.z1 - anim.z0) * e; if (k >= 1) anim = null; }
+    else if (!ptrs.size) {
+      if (Math.abs(vyaw) + Math.abs(vpitch) > 0.0001) { yaw += vyaw; pitch = clamp(pitch + vpitch, -1.35, 1.35); vyaw *= 0.93; vpitch *= 0.93; }
+      else if (spin && !spinHold && t - lastTouch > 7000) yaw += dt * 0.00004 * (zoom > 2 ? 0.4 : 1);
+    }
+    if (S && texDirty && (t - lastPaint > (speed > 1 ? 450 : S.civStart == null ? 1500 : 150))) paintTex();
+    if (S && hl && performance.now() > hl.until) { hl = null; texDirty = true; }
+    render(t);
+    if (ready && t - uiAt > 800) {
+      uiAt = t; renderHeader();
+      const lk = S.log.length ? S.log[S.log.length - 1].at + ':' + S.log.length : '';
+      if (ptab === 'hist') { if (lk !== lastLogKey) { lastLogKey = lk; renderPanel(false); } }
+      else if (ptab === 'stats' && !chartHover && t - panelAt > 4000) { panelAt = t; renderPanel(false); }
+      const e = Math.floor(energyNow(Date.now())); if (e !== renderDock._e) { renderDock._e = e; renderDock(); }
+      const er = eraName(); if (Date.now() - hintAt > 45000 || er !== pickHint._era) { pickHint._era = er; pickHint(); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- boot ----------
+  async function boot(hot) {
+    resize();
+    let okGL = false; try { okGL = initGL(); } catch (e) { okGL = false; }
+    requestAnimationFrame(frame);
+    if (hot && hot.save) { try { deserialize(hot.save); ready = true; texDirty = true; renderAll(); return; } catch (e) { } }
+    let local = null, hadOld = false;
+    try { const str = localStorage.getItem(KEY); if (str) local = { data: str, savedAt: JSON.parse(str).savedAt || 0 }; if (localStorage.getItem('worldseed.save.v1')) hadOld = true; } catch (e) { local = null; }
+    openModal('<div class="kicker">Worldseed</div><h2>Finding your world…</h2><div class="prog"><i style="width:35%"></i></div>');
+    busy = true;
+    const storeP = connectStore();
+    const remote = await Promise.race([storeP, sleep(4000).then(() => undefined)]);
+    let chosen = local;
+    if (remote && remote.data && (!local || remote.savedAt > local.savedAt)) chosen = remote;
+    busy = false;
+    if (chosen) { try { deserialize(chosen.data); if (!S.syncAt) S.syncAt = S.savedAt; } catch (e) { chosen = null; } }
+    if (!chosen) startNew(randomName(), hadOld ? 'Your first world was rebuilt as a globe, so this is a fresh start.' : '');
+    else { closeModal(); ready = true; texDirty = true; renderAll(); if (Date.now() - S.syncAt > 5 * 60000) await catchUp(true); }
+    if (remote === undefined) storeP.then(r => { if (r && r.data && r.savedAt > (S.savedAt || 0) + 10000 && !busy) { try { deserialize(r.data); texDirty = true; renderAll(); catchUp(true); } catch (e) { } } else if (dbRef) save(); });
+    else if (dbRef && (!remote || !remote.data || chosen !== remote)) save();
+    if (!okGL) toast('Your browser could not start the 3D globe.');
+  }
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) { try { window.claude.hot.snapshot(() => ({ save: S && ready ? serialize(Date.now()) : null })); } catch (e) { } }
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot); else boot((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+
+</script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
