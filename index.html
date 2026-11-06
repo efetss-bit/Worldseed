@@ -175,6 +175,36 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 .tierbar i { display: block; height: 100%; }
 .tierlg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
 .tierlg i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.plain li { display: grid; gap: 1px; padding: 7px 0; border-bottom: 1px solid rgba(34, 52, 58, .7); font-size: 13.5px; }
+.plain li span { font-size: 12px; color: var(--muted); }
+.tree { font-size: 13px; }
+.tn { display: grid; grid-template-columns: 12px 1fr; gap: 8px; padding: 5px 0; position: relative; }
+.tn .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; box-shadow: 0 0 0 3px var(--bg); }
+.tn.dead i { color: var(--faint); }
+.tn .tm2 { display: block; font: 11px/1.4 var(--f-mono); color: var(--faint); }
+.tlink { background: none; border: 0; padding: 0; color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; font-size: 13.5px; }
+.tb { margin-left: 4px; border-left: 1px solid var(--line2); }
+.tbr { padding-left: 12px; position: relative; }
+.tbr::before { content: ""; position: absolute; left: 0; top: 11px; width: 9px; border-top: 1px solid var(--line2); }
+@media (max-width: 520px) { .seg button { padding: 7px 7px; font-size: 11px; } }
+.govcard { display: grid; gap: 2px; background: var(--raise); border: 1px solid var(--line2); border-radius: 10px; padding: 10px 12px; }
+.govcard .k { font: 600 10px/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.govcard b { font: 700 16px/1.25 var(--f-display); }
+.govcard span:last-child { font-size: 13px; color: var(--muted); }
+.civics { display: grid; gap: 6px; }
+.civics div { display: grid; gap: 1px; border-left: 3px solid var(--gold); padding: 2px 0 2px 10px; }
+.civics b { font-size: 13.5px; }
+.civics span { font-size: 12.5px; color: var(--muted); }
+.pwbars { display: grid; grid-template-columns: auto 1fr 28px; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.pwbars .bar { height: 7px; }
+.pwbars b { font: 600 12px/1 var(--f-mono); color: var(--ink); text-align: right; }
+.chg { display: block; font-size: 12px; color: var(--k-life); margin-top: 1px; }
+.lineage { display: grid; border-left: 2px solid var(--line2); margin-left: 4px; padding-left: 12px; }
+.lstep { display: grid; grid-template-columns: 12px 1fr; gap: 8px; padding: 6px 0; position: relative; }
+.lstep .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; margin-left: -19px; box-shadow: 0 0 0 3px var(--bg); }
+.lstep .tm2 { display: block; font: 11px/1.4 var(--f-mono); color: var(--faint); }
+.log li.favl { border-left: 3px solid #f3c766; padding-left: 8px; }
 .help h3 { font: 700 15px/1.2 var(--f-display); margin: 18px 0 6px; }
 .help h3:first-child { margin-top: 0; }
 .help p, .help li { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
@@ -269,7 +299,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
         <canvas id="gl" aria-label="Your world, seen from space"></canvas>
         <canvas id="ov"></canvas>
         <div class="hud tl"><div class="seg" id="modes" role="group" aria-label="Map view">
-          <button data-m="world" aria-pressed="true">World</button><button data-m="peoples" aria-pressed="false">Nations</button><button data-m="life" aria-pressed="false">Life</button>
+          <button data-m="world" aria-pressed="true">World</button><button data-m="peoples" aria-pressed="false">Nations</button><button data-m="faiths" aria-pressed="false">Faiths</button><button data-m="life" aria-pressed="false">Life</button>
         </div></div>
         <div class="hud tr">
           <button class="rbtn" id="zin" aria-label="Zoom in">+</button>
@@ -312,6 +342,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
   <button data-v="help"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M8 7.8a2.2 2.2 0 1 1 3 2c-.7.3-1 .8-1 1.5v.4M10 14.3v.2"/></svg>Help</button>
 </nav>
 <div class="toast" id="toast"></div>
+<input type="file" id="bkfile" accept=".json,application/json" hidden>
 <div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
 
 <script>
@@ -348,7 +379,7 @@ const URBAN = [0.25, 0.3, 0.35, 0.4, 0.4, 0.45, 0.6, 0.75, 0.8, 0.85];
 const TIERS = ['Camp', 'Village', 'Town', 'City', 'Metropolis'];
 // real days a leading people spends on each discovery: Stone Age about 3 weeks, Space Age after about 6 months
 const TECH_DAYS = [0.3, 0.7, 1, 1.5, 2, 2.5, 3, 3, 3, 3, 5, 6, 7, 12, 8, 8, 9, 20, 8, 8, 8, 9, 6, 6, 6, 6, 6, 5, 5, 5, 7, 10, 10, 12, 13];
-let TECH_SCALE = 1.4;
+let TECH_SCALE = 1.65;
 function techCost(k) { return TECH_DAYS[Math.min(k, TECH_DAYS.length - 1)] * 8640 * 1.55 * (1 + 0.012 * k) * TECH_SCALE; }
 const AGE_OF = []; { let a = 0; for (let k = 0; k <= TECHS.length; k++) { AGE_OF[k] = a; if (k < TECHS.length && TECHS[k][2] === 'age') a++; } }
 function ageOf(t) { return AGE_OF[Math.min(t, TECHS.length)]; }
@@ -414,7 +445,7 @@ function genTerrain(seed) {
 function computeTile(i) {
   const h = height[i], y = (i / W) | 0, lat = Math.abs((y + 0.5) / H * 2 - 1);
   const elev = h > SEA ? (h - SEA) / (255 - SEA) : 0;
-  const t = clamp(1.04 - Math.pow(lat, 1.4) * 1.02 - elev * 0.7 + S.gt - S.winter, 0, 1);
+  const t = clamp(1.04 - Math.pow(lat, 1.4) * 1.02 - elev * 0.7 + S.gt - S.winter + (S.clim || 0), 0, 1);
   temp[i] = t;
   let b;
   if (h <= SEA) { water[i] = 1; b = t < 0.1 ? BIO.ICE : (h < SEA - 26 ? BIO.DEEP : BIO.SEA); }
@@ -432,7 +463,7 @@ function computeTile(i) {
   biome[i] = b;
   fert[i] = BIOME[b].f * (water[i] ? 1 : (0.75 + 0.5 * moist[i] / 255)) * (0.55 + 0.45 * Math.min(1, t * 1.6));
 }
-function computeAll() { for (let i = 0; i < N; i++) computeTile(i); S._tempKey = S.gt - S.winter; }
+function computeAll() { for (let i = 0; i < N; i++) computeTile(i); S._tempKey = S.gt - S.winter + (S.clim || 0); }
 
 // ---------- names ----------
 const SYL = ['ka', 'ru', 'mo', 'ten', 'vel', 'ar', 'os', 'lu', 'pha', 'xi', 'dor', 'en', 'sil', 'tra', 'qu', 'ne', 'bo', 'rha', 'cy', 'mel', 'zo', 'il', 'gar', 'pe', 'tho', 'an', 'ul', 'ves', 'nyr', 'ko', 'sa', 'mi', 'tal', 'ash', 'ere', 'iun'];
@@ -467,13 +498,13 @@ function newWorld(seed, name, now) {
   for (let k = 0; k < 5000; k++) { const i = (R() * N) | 0; if (biome[i] === BIO.SEA) { const sc = temp[i] + R() * 0.2; if (sc > bs) { bs = sc; best = i; } } }
   if (best < 0) best = (R() * N) | 0;
   const s = mkSpecies(null, { hab: 0, heat: temp[best], size: 1, diet: 0, cx: 0, iq: 0, hue: 160 });
-  s.name = 'Protocella primus';
+  s.name = 'Protocella primus'; S.tree = {}; S.treeV = 1; treeAdd(s);
   for (let k = 0; k < 8; k++) { const j = NB[best * 8 + k]; if (water[j]) setSp(j, s.id); }
   setSp(best, s.id);
   addLog('life', 'The first living cells stirred in the warm shallows. ' + s.name + ' is born.');
   return S;
 }
-const MINOR = { peace: 1, city: 1, life: 1, nature: 1, death: 1, war: 1, culture: 1 };
+const MINOR = { peace: 1, city: 1, life: 1, nature: 1, death: 1, war: 1, culture: 1, ruler: 1, hero: 1 };
 function addLog(kind, text, at) {
   S.log.push({ k: kind, t: S.tick, d: dateLabel(), x: text, at: at || STAMP || Date.now() });
   if (S.log.length > 280) {
@@ -490,24 +521,48 @@ function mkSpecies(parent, tr) {
   for (let g = 0; g < 70000; g++) { if (id >= 65000) id = 1; if (!S.species[id]) break; id++; }
   S.spSeq = id + 1;
   const s = { id, parent: parent ? parent.id : 0, born: S.tick, tiles: 0, peak: 0, gen: parent ? parent.gen + 1 : 0, est: 0, ...tr };
+  S.uidSeq = (S.uidSeq || 0) + 1; s.uid = S.uidSeq; s.puid = parent ? parent.uid || 0 : 0;
+  s.anc = parent ? (S.tree && S.tree[parent.uid] ? parent.uid : parent.anc || 0) : 0; // nearest ancestor kept in the tree of life
   s.genus = parent && R() < 0.82 && Math.abs(parent.cx - s.cx) < 2 ? parent.genus : genus();
   s.name = s.genus + ' ' + epithet(s);
-  S.species[id] = s; S.stats.born++; S.spCount = (S.spCount || 0) + 1;
+  s.bornAt = STAMP || Date.now(); s.parentName = parent ? parent.name : ''; S.species[id] = s; S.stats.born++; S.spCount = (S.spCount || 0) + 1;
   return s;
 }
 function setSp(i, id) {
   const o = sp[i]; if (o === id) return;
   sp[i] = id;
   if (o) { const s = S.species[o]; if (s && --s.tiles <= 0) extinct(s); }
-  if (id) { const s = S.species[id]; s.tiles++; if (s.tiles > s.peak) s.peak = s.tiles; if (!s.est && s.tiles >= 12) { s.est = 1; established(s); } }
+  if (id) { const s = S.species[id]; s.tiles++; if (s.tiles > s.peak) s.peak = s.tiles; if (!s.est && s.tiles >= 12) { s.est = 1; established(s); } if (s.tiles === 40) treeAdd(s); }
 }
 function extinct(s) {
+  for (const c of Object.values(S.cultures)) if (c.tamed) c.tamed = c.tamed.filter(id => id !== s.id);
   delete S.species[s.id]; S.stats.extinct++; S.spCount--;
-  if (s.peak >= 150 || s.awoke) {
+  const T = S.tree && S.tree[s.uid]; if (T) { T[3] = STAMP || Date.now(); T[6] = Math.max(T[6], s.peak); pruneTree(); }
+  if (s.peak >= 150 || s.awoke || (s.hunted && s.peak >= 60)) {
     S.fossils.push({ name: s.name, hue: s.hue, born: s.born, died: S.tick, peak: s.peak, hab: s.hab, size: s.size, diet: s.diet, cx: s.cx, iq: s.iq });
     if (S.fossils.length > 30) S.fossils.shift();
-    if (s.peak >= 400) addLog('death', 'Once widespread, ' + s.name + ' has gone extinct.');
+    if (s.hunted && S.tick - (s.huntedT || 0) < 3000) { S.stats.humanExt = (S.stats.humanExt || 0) + 1; addLog('death', 'Hunted and crowded out by the ' + s.hunted + ', ' + s.name + ' has gone extinct.'); }
+    else if (s.peak >= 400) addLog('death', 'Once widespread, ' + s.name + ' has gone extinct.');
   }
+}
+// ---------- tree of life: every species that ever became established, linked to its ancestor ----------
+// entry: [name, parentUid, bornAt, diedAt, hue, hab, peak, iq, cx, parentName]
+function treeAdd(s) {
+  if (!S.tree) S.tree = {};
+  if (!s.uid || S.tree[s.uid]) return;
+  S.tree[s.uid] = [s.name, s.anc || 0, s.bornAt || 0, 0, Math.round(s.hue), s.hab, s.peak, +s.iq.toFixed(1), +s.cx.toFixed(1), s.anc ? '' : (s.parentName || ''), s.size, s.diet, +s.heat.toFixed(2)];
+  pruneTree();
+}
+function pruneTree() {
+  const T = S.tree, keys = Object.keys(T); if (keys.length <= 320) return;
+  // drop the least important extinct species and link their descendants to their own ancestor
+  const gone = keys.filter(k => T[k][3] && T[k][1]).sort((a, b) => T[a][6] - T[b][6]).slice(0, keys.length - 290);
+  const goneSet = new Set(gone);
+  const upOf = k => { let u = T[k][1]; while (u && goneSet.has(String(u))) u = T[u][1]; return u; };
+  for (const j in T) if (!goneSet.has(j) && goneSet.has(String(T[j][1]))) T[j][1] = upOf(j);
+  const res = u => { while (u && goneSet.has(String(u))) u = T[u][1]; return u; };
+  for (const x of Object.values(S.species)) if (x.anc && goneSet.has(String(x.anc))) x.anc = res(x.anc);
+  for (const k of gone) delete T[k];
 }
 function first(key, text, kind) { if (S.firsts[key]) return; S.firsts[key] = S.tick; addLog(kind || 'life', text); }
 function established(s) {
@@ -535,7 +590,7 @@ function fitness(s, i) {
     for (let k = 0; k < 8; k += 2) { const o = sp[NB[i * 8 + k]]; if (o && o !== s.id) { const q = S.species[o]; if (q && q.size <= s.size + 1) prey++; } }
     food = food * 0.45 + prey * 0.22;
   }
-  const need = 0.07 * s.size;
+  const need = 0.08 * s.size;
   if (food < need) f *= food / need;
   return f * (0.35 + food);
 }
@@ -598,8 +653,11 @@ function mkCulture(spId, at, parent) {
   };
   c.faithName = word(syl, 2) + pick(['ism', 'ar', 'a', 'ian way']);
   for (let k = 0; k < c.tech; k++) c.capMult *= TECHS[k][1];
-  c.gov = govOf(c);
+  c.gov = parent && parent.gov && parent.gov !== 'Empire' && GOVS[parent.gov] && govOk(c, parent.gov) ? parent.gov : govOf(c);
+  c.govHist = [{ g: c.gov, y: Math.floor(S.civYear + 1), at: STAMP || Date.now() }];
   S.cultures[id] = c;
+  if (parent && parent.lang) c.lang = parent.lang; else newLang(c, 0);
+  newRuler(c, true); adoptCivics(c, true);
   return c;
 }
 // pick the colour farthest from every living nation, so neighbours never look alike
@@ -608,33 +666,149 @@ function freeHue() {
   for (let k = 0; k < 24; k++) { const h = (k * 15 + R() * 10) % 360; let d = 999; for (const u of used) { const x = Math.abs(h - u); d = Math.min(d, Math.min(x, 360 - x)); } if (d > bd) { bd = d; best = Math.round(h); } }
   return best;
 }
-function govOf(c) {
-  const a = ageOf(c.tech), n = c.cities || 0;
-  if (a === 0) return n >= 4 ? 'Chiefdom' : 'Tribe';
-  if (a <= 4) return n >= 14 ? 'Empire' : 'Kingdom';
-  if (a === 5) return n >= 14 ? 'Empire' : (c.aggr > 0.6 ? 'Kingdom' : 'Republic');
-  return n >= 18 ? (c.aggr > 0.55 ? 'Empire' : 'Federation') : 'Republic';
+// governments: who can have them, how likely each people is to choose them, and what they change
+// mods: mil sci eco dip cul fai are power multipliers; war res exp split won spread grow are behaviour multipliers
+const GOVS = {
+  Tribe: { n: 'Tribal council', t: ['Elder', 'Elder'], f: c => 'the ' + c.name + ' tribes', d: 'Elders of each family meet around the fire to decide together.', min: 0, max: 0, m: {} },
+  Chiefdom: { n: 'Chiefdom', t: ['Chief', 'Chieftess'], f: c => 'the ' + c.name + ' chiefdom', d: 'One strong chief leads all the villages.', min: 0, max: 0, m: { mil: 1.1 } },
+  Kingdom: { n: 'Monarchy', t: ['King', 'Queen'], f: c => 'the Kingdom of ' + c.name, d: 'A royal family rules, and the crown passes from parent to child.', min: 1, w: c => 1, m: { mil: 1.1, cul: 1.1 } },
+  Theocracy: { n: 'Theocracy', t: ['High Priest', 'High Priestess'], f: c => 'the Holy Realm of ' + c.name, d: 'Priests rule in the name of the faith.', min: 1, req: c => c.fid && c.faith > 0.5, w: c => 2.5 * c.faith, m: { fai: 1.5, cul: 1.2, sci: 0.8, spread: 2, war: 1.2 } },
+  Empire: { n: 'Empire', t: ['Emperor', 'Empress'], f: c => 'the Empire of ' + c.name, d: 'One ruler commands many conquered lands and peoples.', min: 1, req: c => (c.cities || 0) >= 12, w: c => 2 * c.aggr, m: { mil: 1.4, eco: 1.1, dip: 0.8, war: 1.4, exp: 1.3, split: 1.4 } },
+  Merchant: { n: 'Merchant republic', t: ['Doge', 'Dogaressa'], f: c => 'the Merchant Republic of ' + c.name, d: 'Rich trading families elect a leader from among themselves.', min: 3, elected: 1, w: c => 1.8 * (1 - c.aggr), m: { eco: 1.5, dip: 1.3, mil: 0.85, war: 0.7 } },
+  Republic: { n: 'Republic', t: ['Consul', 'Consul'], t2: ['President', 'President'], f: c => 'the Republic of ' + c.name, d: 'Citizens elect their leaders for a few years at a time.', min: 3, elected: 1, w: c => 1 + c.curio, m: { sci: 1.25, dip: 1.15, war: 0.85 } },
+  Democracy: { n: 'Democracy', t: ['President', 'President'], f: c => 'the Democratic Republic of ' + c.name, d: 'Every adult can vote, and the press is free to criticise.', min: 6, elected: 1, w: c => 2 * (1 - c.aggr), m: { sci: 1.3, eco: 1.2, dip: 1.4, mil: 0.9, war: 0.6, grow: 1.1 } },
+  Dictatorship: { n: 'Dictatorship', t: ['Supreme Leader', 'Supreme Leader'], f: c => 'the State of ' + c.name, d: 'One leader took power by force and rules without elections.', min: 6, w: c => 2 * c.aggr * (c.dark || c.war ? 2 : 1), m: { mil: 1.5, dip: 0.6, sci: 0.9, cul: 0.8, war: 1.6 } },
+  Union: { n: 'People\u2019s union', t: ['Chairman', 'Chairwoman'], f: c => 'the People\u2019s Union of ' + c.name, d: 'The state owns the farms and factories and plans the economy.', min: 6, w: c => 1.2 * (c.dark ? 2 : 1), m: { eco: 1.2, mil: 1.25, sci: 1.05, dip: 0.8, cul: 0.9, grow: 1.1 } },
+  Federation: { n: 'Federation', t: ['Chancellor', 'Chancellor'], f: c => 'the Federation of ' + c.name, d: 'Many provinces govern themselves and share one government.', min: 7, elected: 1, req: c => (c.cities || 0) >= 15, w: c => 2 * (1 - c.aggr), m: { eco: 1.3, dip: 1.3, cul: 1.15, split: 0.4 } },
+  Technocracy: { n: 'Technocracy', t: ['Director', 'Director'], f: c => 'the Technocracy of ' + c.name, d: 'Scientists and engineers run the state by the numbers.', min: 8, w: c => 3 * c.curio, m: { sci: 1.6, eco: 1.2, cul: 0.85 } },
+};
+const GOV_TEXT = {
+  Chiefdom: c => 'The ' + c.name + ' tribes united under a single chief.',
+  Kingdom: (c, old) => old === 'Tribe' || old === 'Chiefdom' ? 'The ' + c.name + ' crowned their first king. ' + Nation(c) + ' is born.' : 'The ' + c.name + ' brought back the crown. ' + Nation(c) + ' is restored.',
+  Theocracy: c => 'Priests of the ' + (faithOf(c) ? faithOf(c).name : 'old gods') + ' took power. ' + Nation(c) + ' is now ruled by the faith.',
+  Empire: c => 'The ' + c.name + ' now rule so many lands that they call themselves an empire: ' + nation(c) + '.',
+  Merchant: c => 'Rich merchant families took control of the ' + c.name + ' and founded ' + nation(c) + '.',
+  Republic: c => 'The ' + c.name + ' replaced their rulers with elected leaders and founded ' + nation(c) + '.',
+  Democracy: c => 'Every adult among the ' + c.name + ' won the right to vote. ' + Nation(c) + ' is born.',
+  Dictatorship: c => 'A general seized power' + (capitalOf(c) ? ' in ' + capitalOf(c).name : '') + '. ' + Nation(c) + ' is ruled by one leader.',
+  Union: c => 'Workers rose up across the lands of the ' + c.name + ' and founded ' + nation(c) + '.',
+  Federation: c => 'The provinces of the ' + c.name + ' joined as equals in ' + nation(c) + '.',
+  Technocracy: c => 'Scientists and engineers took charge of the ' + c.name + '. ' + Nation(c) + ' is born.',
+};
+// civics: choices each people makes about how to live
+const CIVICS = {
+  warrior: { n: 'Warrior code', d: 'Every adult trains for battle.', min: 0, anti: ['pacifism'], w: c => 2 * c.aggr, m: { mil: 1.35, war: 1.6, dip: 0.85 } },
+  pacifism: { n: 'Pacifism', d: 'War is a last resort and violence is shameful.', min: 1, anti: ['warrior', 'conscription'], w: c => 2 * (1 - c.aggr), m: { war: 0.4, dip: 1.3, mil: 0.8 } },
+  trade: { n: 'Free trade', d: 'Merchants travel freely across borders.', min: 1, anti: ['isolation'], w: c => 1 + (1 - c.aggr), m: { eco: 1.35, dip: 1.15, res: 1.05, drift: 0.6 } },
+  isolation: { n: 'Isolation', d: 'Borders are closed to foreigners and their ideas.', min: 1, anti: ['trade'], w: c => 0.6 + c.aggr * 0.5, m: { dip: 0.7, cul: 1.15, spreadIn: 0.3, drift: 2 } },
+  stateFaith: { n: 'State religion', d: 'One faith is official and its priests sit beside the ruler.', min: 1, req: c => c.fid, anti: ['freeBelief'], w: c => 2 * c.faith, m: { fai: 1.4, spread: 1.8, sci: 0.9 } },
+  freeBelief: { n: 'Freedom of belief', d: 'People may follow any faith or none.', min: 3, anti: ['stateFaith'], w: c => 1.5 * c.curio * (1.2 - c.faith), m: { sci: 1.1, cul: 1.1, holy: 0.4 } },
+  scholarship: { n: 'Scholarship', d: 'Libraries and schools are the pride of the land.', min: 1, w: c => 2 * c.curio, m: { sci: 1.3, res: 1.15 } },
+  monuments: { n: 'Monument building', d: 'Great works honour rulers and gods.', min: 1, w: c => 1 + c.faith, m: { cul: 1.35, won: 2.2 } },
+  expansion: { n: 'Expansionism', d: 'New land must always be settled.', min: 0, w: c => 1 + c.aggr, m: { exp: 1.5, mil: 1.1 } },
+  tradition: { n: 'Tradition', d: 'The old ways keep the people united.', min: 0, w: c => 1.2, m: { split: 0.5, cul: 1.15, res: 0.95 } },
+  seafaring: { n: 'Seafaring', d: 'Sailors and harbours are the heart of the nation.', min: 2, req: c => knows(c, 'sail'), w: c => 1.5, m: { sea: 2.2, eco: 1.15 } },
+  conscription: { n: 'Conscription', d: 'Every young person serves in the army.', min: 2, anti: ['pacifism'], w: c => 1.5 * c.aggr, m: { mil: 1.3, grow: 0.95 } },
+  welfare: { n: 'Welfare state', d: 'The state cares for the sick, the old and the poor.', min: 6, w: c => 1.6 * (1 - c.aggr), m: { grow: 1.15, plague: 0.5, eco: 0.95, cul: 1.1 } },
+  freePress: { n: 'Free press', d: 'Newspapers can print anything, even about the ruler.', min: 5, notGov: ['Dictatorship', 'Theocracy'], w: c => 1.5 * c.curio, m: { sci: 1.15, dip: 1.1 } },
+};
+function civicSlots(c) { const a = ageOf(c.tech); return a === 0 ? 1 : a < 3 ? 2 : a < 6 ? 3 : 4; }
+function mul(c, key) { let v = (GOVS[c.gov] && GOVS[c.gov].m[key]) || 1; for (const k of c.civics || []) if (CIVICS[k] && CIVICS[k].m[key]) v *= CIVICS[k].m[key]; return v; }
+function civicOk(c, k, list) { const C = CIVICS[k]; if (!C || ageOf(c.tech) < C.min || (C.req && !C.req(c)) || (C.notGov && C.notGov.includes(c.gov))) return false; return !(list || c.civics || []).some(x => x === k || (C.anti || []).includes(x) || (CIVICS[x] && (CIVICS[x].anti || []).includes(k))); }
+function pickCivic(c) {
+  const opts = Object.keys(CIVICS).filter(k => civicOk(c, k)); if (!opts.length) return null;
+  let tot = 0; const w = opts.map(k => { const v = Math.max(0.05, CIVICS[k].w(c)); tot += v; return v; });
+  let r = R() * tot; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) return opts[i]; } return opts[opts.length - 1];
 }
+function adoptCivics(c, quiet) {
+  if (!c.civics) c.civics = [];
+  c.civics = c.civics.filter(k => CIVICS[k] && (!CIVICS[k].req || CIVICS[k].req(c)) && !(CIVICS[k].notGov || []).includes(c.gov));
+  while (c.civics.length < civicSlots(c)) { const k = pickCivic(c); if (!k) break; c.civics.push(k); if (!quiet) addLog('nation', Nation(c) + ' adopted ' + CIVICS[k].n.toLowerCase() + '. ' + CIVICS[k].d); }
+}
+function govOk(c, g) { const G = GOVS[g], a = ageOf(c.tech); if (g === 'Tribe' || g === 'Chiefdom') return a === 0; return a >= G.min && (!G.req || G.req(c)); }
+function chooseGov(c) {
+  const opts = Object.keys(GOVS).filter(g => g !== c.gov && g !== 'Tribe' && g !== 'Chiefdom' && govOk(c, g)); if (!opts.length) return null;
+  let tot = 0; const w = opts.map(g => { const v = Math.max(0.05, GOVS[g].w(c)); tot += v; return v; });
+  let r = R() * tot; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) return opts[i]; } return opts[opts.length - 1];
+}
+function setGov(c, g) {
+  const old = c.gov; if (g === old) return;
+  c.gov = g; c.govHist = (c.govHist || []).concat([{ g, y: Math.floor(S.civYear + 1), at: STAMP || Date.now() }]).slice(-8);
+  let t = (GOV_TEXT[g] || (x => 'The ' + x.name + ' are now ' + nation(x) + '.'))(c, old);
+  const keepRuler = c.ruler && (old === 'Tribe' || old === 'Chiefdom') && (g === 'Chiefdom' || g === 'Kingdom');
+  if (keepRuler && g === 'Kingdom') t += ' ' + rulerTitle(c, c.ruler) + ' ' + c.ruler.n + ' wears the first crown.';
+  addLog('nation', t);
+  const before = (c.civics || []).slice(); adoptCivics(c, true);
+  if (!keepRuler) newRuler(c);
+  if (before.length !== (c.civics || []).length || before.some((k, i) => k !== c.civics[i])) addLog('nation', Nation(c) + ' now follows ' + c.civics.map(k => CIVICS[k].n.toLowerCase()).join(', ') + '.');
+}
+const TITLES = {};
+function roman(n) { if (n < 2) return ''; const m = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; let o = ''; for (const [v, t] of m) while (n >= v) { o += t; n -= v; } return ' ' + o; }
+function rulerTitle(c, r) { const G = GOVS[c.gov || 'Tribe'] || GOVS.Tribe, t = G.t2 && ageOf(c.tech) >= 6 ? G.t2 : G.t; return t[r && r.g === 'f' ? 1 : 0]; }
+function rulerName(c, r) { return r ? rulerTitle(c, r) + ' ' + r.n + (r.ep ? ' ' + r.ep : '') : ''; }
+function reignTicks(c) { const g = c.gov || 'Tribe', yrs = GOVS[g] && GOVS[g].elected ? 4 + R() * 8 : g === 'Dictatorship' ? 6 + R() * 25 : 8 + R() * 30, perTick = AGE_YEARS[Math.max(0, leadAge())] * fastF(); return Math.max(30, Math.round(yrs / perTick)); }
+function newRuler(c, quiet) {
+  const old = c.ruler, g = R() < 0.45 ? 'f' : 'm';
+  if (!c.rn) c.rn = {};
+  let base = R() < 0.3 && c.rulers && c.rulers.length ? pick(c.rulers).n.replace(/ [IVX]+$/, '') : cap1((pick(c.syl) + pick(SYL) + (R() < 0.4 ? pick(['a', 'os', 'en', 'ia', 'ar', 'is']) : '')).slice(0, 9));
+  c.rn[base] = (c.rn[base] || 0) + 1;
+  const r = { n: base + (!(GOVS[c.gov] && GOVS[c.gov].elected) ? roman(c.rn[base]) : ''), g, from: Math.floor(S.civYear + 1), at: STAMP || Date.now(), ep: '' };
+  if (old) { old.to = Math.floor(S.civYear + 1); old.title = rulerTitle(c, old); delete old.at; c.rulers = (c.rulers || []).concat([old]).slice(-6); }
+  c.ruler = r; c.reignEnd = S.tick + reignTicks(c);
+  if (quiet) return;
+  const yrs = old ? Math.max(1, (r.from - old.from)) : 0, who = rulerTitle(c, r) + ' ' + r.n, rep_ = !!(GOVS[c.gov] && GOVS[c.gov].elected);
+  let t;
+  if (rep_) t = old ? (old.title || 'President') + ' ' + old.n + (old.ep ? ' ' + old.ep : '') + '\u2019s time in office ended. ' + r.n + ' won the election and now leads ' + nation(c) + '.' : r.n + ' was elected to lead ' + nation(c) + '.';
+  else if (old) t = 'After ' + yrs + (yrs === 1 ? ' year' : ' years') + ' of rule, ' + (old.title || rulerTitle(c, old)) + ' ' + old.n + (old.ep ? ' ' + old.ep : '') + ' died. ' + who + ' now leads ' + nation(c) + '.';
+  else t = who + ' now leads ' + nation(c) + '.';
+  addLog('ruler', t);
+}
+function epithet_(c, ep) { if (c.ruler && !c.ruler.ep) c.ruler.ep = ep; }
+function addFamous(c, n, what) { c.famous = (c.famous || []).concat([{ n, w: what, y: Math.floor(S.civYear + 1) }]).slice(-8); }
+const TENETS = ['that fire is holy and must never go out', 'that the stars are the eyes of the ancestors', 'kindness to strangers above all', 'that the sea gave birth to all life', 'one god who lives in the sky', 'that every river and tree has its own spirit', 'that all life returns as new life', 'that the sun and moon are lovers who meet at eclipses', 'that knowledge is the highest prayer', 'that the land belongs to no one'];
+function foundFaith(c, why) {
+  if (!S.faiths) S.faiths = {};
+  for (const c of Object.values(S.cultures)) if (!c.lang) newLang(c, 0);
+  S.faithSeq = (S.faithSeq || 0) + 1;
+  const used = Object.values(S.faiths).map(f => f.hue); let hue = (R() * 360) | 0, bd = -1;
+  for (let k = 0; k < 24; k++) { const h = (k * 15 + 7) % 360; let d = 999; for (const u of used) { const x = Math.abs(h - u); d = Math.min(d, Math.min(x, 360 - x)); } if (d > bd) { bd = d; hue = h; } }
+  const cap = capitalOf(c), prophet = word(c.syl, 2);
+  const fw = word(c.syl, 2), f = { id: S.faithSeq, name: pick([fw + ' faith', 'Way of ' + fw, 'Church of ' + fw, fw + ' Path', 'Temple of ' + fw]), hue, founder: c.name, prophet, tenet: pick(TENETS), bornAt: STAMP || Date.now(), y: Math.floor(S.civYear + 1), holy: cap ? cap.name : '', parent: c.fid || 0 };
+  S.faiths[f.id] = f;
+  const oldF = c.fid && S.faiths[c.fid]; c.fid = f.id; c.faith = Math.max(c.faith || 0, 0.4);
+  addFamous(c, prophet, why === 'schism' ? 'reformer who founded the ' + f.name : 'prophet who founded the ' + f.name);
+  if (why === 'schism' && oldF) addLog('faith', 'Reformers led by ' + prophet + ' broke away from the ' + oldF.name + ' and founded the ' + f.name + ', now the faith of the ' + c.name + '.');
+  else addLog('faith', 'A prophet named ' + prophet + (cap ? ' in ' + cap.name : '') + ' founded the ' + f.name + '. It teaches ' + f.tenet + '.');
+  return f;
+}
+function newLang(c, parent) {
+  if (!S.langs) S.langs = {};
+  S.langSeq = (S.langSeq || 0) + 1;
+  const names = new Set(Object.values(S.langs).map(l => l.name)); let nm = '';
+  for (let k = 0; k < 8 && (!nm || names.has(nm)); k++) nm = (k < 3 ? c.name : word(c.syl, 2)).replace(/[aeiouy]+$/i, '') + pick(['ic', 'ish', 'ese', 'an', 'i', 'ar', 'ian']);
+  const p = parent && S.langs[parent];
+  S.langs[S.langSeq] = { id: S.langSeq, name: (p ? '' : 'Old ') + nm, parent: parent || 0, at: STAMP || Date.now(), y: Math.floor(S.civYear + 1), by: c.name };
+  c.lang = S.langSeq; return S.langs[S.langSeq];
+}
+function langOf(c) { return c && c.lang && S.langs ? S.langs[c.lang] : null; }
+function faithOf(c) { return c && c.fid && S.faiths ? S.faiths[c.fid] : null; }
+function govOf(c) { const a = ageOf(c.tech); if (a === 0) return (c.cities || 0) >= 4 ? 'Chiefdom' : 'Tribe'; return c.gov && govOk(c, c.gov) ? c.gov : 'Kingdom'; }
 function nation(c) {
   if (!c) return 'a lost people';
-  const g = c.gov || 'Tribe';
-  if (g === 'Tribe') return 'the ' + c.name + ' tribes';
-  if (g === 'Chiefdom') return 'the ' + c.name + ' chiefdom';
-  return 'the ' + g + ' of ' + c.name;
+  return (GOVS[c.gov] || GOVS.Tribe).f(c);
 }
 const Nation = c => cap1(nation(c));
+// governments change on their own: tribes unite, kingdoms form, and later revolutions and reforms bring new systems
 function updateGov(c) {
-  const g = govOf(c); if (g === c.gov) return;
-  const old = c.gov; c.gov = g;
-  let t;
-  if (g === 'Chiefdom') t = 'The ' + c.name + ' tribes united under a single chief.';
-  else if (g === 'Kingdom' && (old === 'Tribe' || old === 'Chiefdom')) t = 'The ' + c.name + ' crowned their first king. ' + Nation(c) + ' is born.';
-  else if (g === 'Empire') t = 'The ' + c.name + ' now rule so many cities that they call their land an empire: ' + nation(c) + '.';
-  else if (g === 'Republic') t = 'The ' + c.name + ' replaced their rulers with elected leaders and founded ' + nation(c) + '.';
-  else if (g === 'Federation') t = 'The provinces of the ' + c.name + ' joined as equals in ' + nation(c) + '.';
-  else t = 'The ' + c.name + ' are now ' + nation(c) + '.';
-  addLog('nation', t);
+  if (!c.civics) adoptCivics(c, true);
+  if (!c.gov) c.gov = govOf(c);
+  const a = ageOf(c.tech);
+  if (a === 0) { if (c.gov === 'Tribe' && (c.cities || 0) >= 4) setGov(c, 'Chiefdom'); return; }
+  if (c.gov === 'Tribe' || c.gov === 'Chiefdom') { setGov(c, 'Kingdom'); return; }
+  if (!govOk(c, c.gov)) { const g = chooseGov(c) || 'Kingdom'; setGov(c, g); return; }
+  if ((c.civics || []).length < civicSlots(c)) adoptCivics(c);
 }
+function revolution(c, chance) { if (R() < chance) { const g = chooseGov(c); if (g) setGov(c, g); } }
 function claim(i, cid) {
   const o = own[i]; if (o === cid) return;
   if (o) { const d = S.cultures[o]; if (d) { const share = d.tiles > 0 ? d.pop / d.tiles : 0; d.pop -= share; d.tiles--; d.fs -= fert[i]; if (cid && S.cultures[cid]) S.cultures[cid].pop += share * 0.6; } }
@@ -664,10 +838,48 @@ function awaken(s) {
   claim(at, c.id); for (let k = 0; k < 8; k++) { const j = NB[at * 8 + k]; if (!water[j]) claim(j, c.id); }
   const ct = foundCity(c, at, true);
   if (S.civStart == null) {
-    S.civStart = S.tick;
+    S.civStart = S.tick; S.bandsV = 1;
     S.ages.push({ a: 0, at: STAMP || Date.now(), y: 0, by: c.name });
     addLog('big', 'A mind awakens. A troop of clever apes, ' + s.name + ', gathered around a fire and spoke the first words. They call themselves the ' + c.name + ', and their first camp is ' + ct.name + '.');
+    extraBands(s, 2 + (R() < 0.5 ? 1 : 0));
   } else addLog('big', 'Far away, another band of ' + s.name + ' learned to speak. They call themselves the ' + c.name + '.');
+}
+// early humans lived in many separate bands, so a few more groups of the same species start their own tribes far away
+function extraBands(s, n) {
+  const made = [];
+  for (let b = 0; b < n; b++) {
+    let best = -1, bs = -1;
+    for (let k = 0; k < 6000; k++) {
+      const i = (R() * N) | 0; if (water[i] || own[i] || fert[i] < 0.3) continue;
+      let d = 1e9; for (const ct of S.cities) d = Math.min(d, distW(ct.i, i));
+      if (d < 9) continue;
+      const sc = fert[i] + (sp[i] === s.id ? 0.8 : 0) + Math.min(d, 30) / 60 + R() * 0.2;
+      if (sc > bs) { bs = sc; best = i; }
+    }
+    if (best < 0) break;
+    const c = mkCulture(s.id, best, null);
+    claim(best, c.id); for (let k = 0; k < 8; k++) { const j = NB[best * 8 + k]; if (!water[j] && !own[j]) claim(j, c.id); }
+    foundCity(c, best, true); made.push(c.name);
+  }
+  if (made.length) addLog('big', 'Elsewhere, other bands of ' + s.name + ' were also learning to speak: the ' + (made.length > 1 ? made.slice(0, -1).join(', the ') + ' and the ' + made[made.length - 1] : made[0]) + '. Each will grow into its own people.');
+}
+// worlds saved before this update get their extra bands when they load
+function upgradeWorld() {
+  if (!S.treeV) { S.treeV = 1; S.treeAt = STAMP || Date.now(); S.tree = S.tree || {}; for (const s of Object.values(S.species)) { if (!s.uid) { S.uidSeq = (S.uidSeq || 0) + 1; s.uid = S.uidSeq; } if (s.tiles >= 40 || s.awoke) treeAdd(s); } }
+  for (const c of Object.values(S.cultures)) { if (!c.ruler) newRuler(c, true); if (!c.civics) adoptCivics(c, true); if (!c.govHist) c.govHist = [{ g: c.gov || 'Tribe', y: Math.floor(S.civYear + 1), at: STAMP || Date.now() }]; }
+  if (!S.faiths) S.faiths = {};
+  for (const c of Object.values(S.cultures)) if (!c.lang) newLang(c, 0);
+  if (S.civStart != null && !S.bandsV) {
+    S.bandsV = 1;
+    const cs = Object.values(S.cultures);
+    if (cs.length < 3) { const s = S.species[cs[0] && cs[0].sp] || { name: 'the first people', id: -1 }; extraBands(s, 3 - cs.length); recount(); }
+  }
+}
+function worldAge() { return S.years + (S.civStart != null ? S.civYear : 0); }
+function fmtAge(y) { return y >= 1e9 ? (y / 1e9).toFixed(2) + ' billion years' : y >= 1e6 ? (y / 1e6).toFixed(1) + ' million years' : Math.round(y).toLocaleString('en-US') + ' years'; }
+function speciesPop(s) {
+  const per = s.cx < 1.2 ? 2e11 : s.cx < 2.5 ? 5e9 : [0, 4e8, 1e8, 2e7, 5e6, 1e6, 2.5e5, 6e4, 1.5e4, 4e3, 1e3][s.size] * (s.hab === 0 ? 2 : 1);
+  return s.tiles * per;
 }
 const WONDERS = [
   ['Stone Circle', 'Painted Caves', 'Totem Hill'], ['Great Ziggurat', 'Bronze Colossus', 'Hanging Gardens'], ['Great Wall', 'Iron Pillar', 'Royal Road'],
@@ -681,8 +893,8 @@ function buildWonder(c) {
   const base = pick(list), nm = base + ' of ' + cap.name;
   S.wonders.push({ i: cap.i, n: nm, base, cul: c.id, a, at: STAMP || Date.now(), y: Math.floor(S.civYear) });
   if (S.wonders.length > 60) S.wonders.shift();
-  c.wonders = (c.wonders || 0) + 1;
-  addLog('wonder', Nation(c) + ' built the ' + nm + '.');
+  c.wonders = (c.wonders || 0) + 1; epithet_(c, 'the Builder');
+  addLog('wonder', Nation(c) + ' built the ' + nm + (c.ruler ? ' under ' + rulerTitle(c, c.ruler) + ' ' + c.ruler.n : '') + '.');
 }
 const CULT = [
   ['{C} painted hunting scenes on cave walls near {city}.', '{C} began burying their dead with flowers and beads.', 'Storytellers of {C} told the first tales of the stars.', '{C} tamed wild dogs that now follow their hunters.', 'The people of {city} carved flutes from bird bones and made the first music.'],
@@ -701,7 +913,8 @@ function cultureEvent(c) {
   const a = ageOf(c.tech), d = c.nb.length ? S.cultures[pick(c.nb)] : null;
   let t = pick(CULT[a]);
   if (t.includes('{D}') && !d) return;
-  t = t.replace('{C}', 'the ' + c.name).replace('{city}', pick(mine).name).replace('{D}', d ? 'the ' + d.name : '').replace('{hero}', word(c.syl, 2)).replace('{faith}', c.faithName);
+  const fz = faithOf(c), hero = word(c.syl, 2); if (t.includes('{hero}')) addFamous(c, hero, 'hero of the Song of ' + hero);
+  t = t.replace('{C}', 'the ' + c.name).replace('{city}', pick(mine).name).replace('{D}', d ? 'the ' + d.name : '').replace('{hero}', hero).replace('{faith}', fz ? fz.name : c.faithName);
   addLog('culture', cap1(t));
 }
 function techUp(c) {
@@ -712,7 +925,8 @@ function techUp(c) {
   const after = ageOf(c.tech);
   if (after > before) {
     if (!S.firsts['age' + after]) { S.firsts['age' + after] = S.tick; S.ages.push({ a: after, at: STAMP || Date.now(), y: Math.floor(S.civYear), by: c.name }); addLog('big', 'The ' + c.name + ' led the world into the ' + AGES[after] + '.'); }
-    if (R() < 0.55) buildWonder(c);
+    if (R() < 0.55 * Math.min(2, mul(c, 'won'))) buildWonder(c);
+    if (after >= 1) revolution(c, after >= 6 ? 0.4 : 0.25);
   }
   if (k === TECHS.length - 1) addLog('big', 'The ' + c.name + ' launched a starship toward another sun. Your world has reached the stars.');
   updateGov(c);
@@ -737,31 +951,43 @@ function cultureMoods(c, pf, f) {
   if (c.dark && T > c.dark) { c.dark = 0; addLog('nation', Nation(c) + ' recovered from its dark age.'); }
   if (c.sick && T > c.sick) c.sick = 0;
   if (c.tech >= 2 && !c.golden && !c.dark && R() < 0.0000075 * pf * (1 + c.faith) * (c.war ? 0.3 : 1.2)) {
-    c.golden = T + dur(3 + R() * 7);
+    c.golden = T + dur(3 + R() * 7); epithet_(c, 'the Great');
     addLog('nation', Nation(c) + ' entered a golden age. Trade, art and learning flourish' + (S.cities.some(x => x.cul === c.id && x.cap) ? ' in ' + capitalOf(c).name : '') + '.');
   }
   if (c.tech >= 4 && !c.golden && !c.dark && R() < 0.000005 * pf * (c.war ? 3 : 1) * (c.sick ? 3 : 1) * (c.tiles > 250 ? 2 : 1)) {
-    c.dark = T + dur(4 + R() * 8);
+    c.dark = T + dur(4 + R() * 8); epithet_(c, 'the Unlucky');
     addLog('death', Nation(c) + ' fell into a dark age. ' + pick(['Old knowledge is being forgotten.', 'Its rulers quarrel and its roads fall silent.', 'Famine and unrest spread through its villages.']));
   }
   if (c.tech >= 5 && c.tech < TECHS.length && R() < 0.000004 * pf * (c.golden ? 4 : 1) * (0.5 + c.curio)) {
     const mine = S.cities.filter(x => x.cul === c.id); if (mine.length) {
-      c.rp += techCost(c.tech) * 0.35; c.geniuses = (c.geniuses || 0) + 1;
-      addLog('tech', 'A genius named ' + word(c.syl, 2) + ' ' + word(c.syl, 2) + ' was born in ' + pick(mine).name + '. Their ideas pushed the ' + c.name + ' closer to ' + TECHS[c.tech][0].toLowerCase() + '.');
+      c.rp += techCost(c.tech) * 0.35; c.geniuses = (c.geniuses || 0) + 1; const gn = word(c.syl, 2) + ' ' + word(c.syl, 2);
+      addFamous(c, gn, 'genius who worked on ' + TECHS[c.tech][0].toLowerCase()); epithet_(c, 'the Wise');
+      addLog('hero', 'A genius named ' + gn + ' was born in ' + pick(mine).name + '. Their ideas pushed the ' + c.name + ' closer to ' + TECHS[c.tech][0].toLowerCase() + '.');
     }
   }
 }
 function civCulture(c) {
   const f = fastF(), cap = capOf(c);
+  if (!c.ruler) newRuler(c, true);
+  if (ageOf(c.tech) >= 1 && R() < 0.0000035 * Math.min(f, 8) * (c.dark ? 5 : 1) * (c.war ? 1.5 : 1)) revolution(c, 1);
+  if (c.civics && c.civics.length && R() < 0.000004 * Math.min(f, 8)) { const old = c.civics.splice((R() * c.civics.length) | 0, 1)[0]; const k = pickCivic(c); if (k && k !== old) { c.civics.push(k); addLog('nation', Nation(c) + ' gave up ' + CIVICS[old].n.toLowerCase() + ' and chose ' + CIVICS[k].n.toLowerCase() + '. ' + CIVICS[k].d); } else c.civics.push(old); }
+  if (S.tick > (c.reignEnd || 0)) { const top = Object.values(S.cultures).sort((a, b) => b.pop - a.pop).slice(0, 3).includes(c); newRuler(c, !top || (c.cities || 0) < 2 || R() < (ageOf(c.tech) < 2 ? 0.75 : 0.4)); }
+  if (!c.fid && c.tech >= 4 && R() < 0.000012 * Math.min(f, 8) * (1 + (c.faith || 0) * 2) * (c.nb.some(id => S.cultures[id] && S.cultures[id].fid) ? 0.25 : 1)) foundFaith(c);
+  if (c.fid && R() < 0.000004 * Math.min(f, 8) && Object.values(S.cultures).filter(x => x.fid === c.fid).length >= 4) foundFaith(c, 'schism');
   cultureMoods(c, Math.min(f, 8), f);
-  const g = Math.min(0.5, 0.004 * (1 + c.faith * 0.3) * (c.golden ? 1.5 : 1) * (c.dark ? 0.5 : 1) * f);
+  diplomacy(c, Math.min(f, 8));
+  if (c.lang && R() < 0.000006 * Math.min(f, 8) * mul(c, 'drift') && Object.values(S.cultures).filter(x => x.lang === c.lang).length >= 2) { const old = langOf(c), nl = newLang(c, c.lang); addLog('culture', 'The speech of the ' + c.name + ' drifted so far from ' + old.name + ' that it became a new language, ' + nl.name + '.'); }
+  if (c.pop / cap > 0.92 && R() < 0.000006 * Math.min(f, 8) * mul(c, 'exp')) migrate(c);
+  if (c.tech > 6 && (!c.tamed || c.tamed.length < 3) && R() < (c.tamed && c.tamed.length ? 0.000003 : 0.00004) * Math.min(f, 8)) tame(c);
+  if (c.tech > 30 && R() < 0.0001 * Math.min(f, 8)) { const cp = capitalOf(c); if (cp) S.fx.push({ t: c.tech >= 35 ? 'ship' : 'launch', x: cp.i % W, y: (cp.i / W) | 0, ttl: 30 }); }
+  const g = Math.min(0.5, 0.004 * (1 + c.faith * 0.3) * (c.golden ? 1.5 : 1) * (c.dark ? 0.5 : 1) * mul(c, 'grow') * f);
   c.pop += c.pop * g * (1 - c.pop / cap);
   if (c.pop < 5) c.pop = 5;
   if (c.pop > (c.peak || 0)) c.peak = c.pop;
   if (c.tech < TECHS.length) {
     let lead = 0; for (const id of c.nb) { const d = S.cultures[id]; if (d && d.tech > c.tech) lead++; }
     const cities = c.cities || 1;
-    const rate = (0.6 + c.curio) * (1 + 0.02 * Math.min(cities, 25)) * (1 + 0.25 * Math.min(lead, 2)) * (0.5 + 0.5 * Math.min(1, c.pop / capOf(c))) * paceOf(c);
+    const rate = (0.6 + c.curio) * (1 + 0.02 * Math.min(cities, 25)) * (1 + 0.25 * Math.min(lead, 2)) * (0.5 + 0.5 * Math.min(1, c.pop / capOf(c))) * paceOf(c) * mul(c, 'res');
     c.rp += rate * f; c.lastRate = rate;
     let guard = 0;
     while (c.tech < TECHS.length && c.rp >= techCost(c.tech) && guard++ < 4) { c.rp -= techCost(c.tech); techUp(c); }
@@ -781,25 +1007,74 @@ function civCulture(c) {
     }
   }
   if (c.tech >= 3 && R() < 0.00012 * pf) cultureEvent(c);
-  if ((c.cities || 0) >= 3 && R() < 0.000004 * pf) buildWonder(c);
+  if ((c.cities || 0) >= 3 && R() < 0.000004 * pf * mul(c, 'won')) buildWonder(c);
   // wars
-  if (!c.war && c.nb.length && c.tech >= 3 && R() < 0.00003 * c.aggr * (1 - c.faith * 0.5) * pf) {
+  if (!c.war && c.nb.length && c.tech >= 3 && R() < 0.00003 * c.aggr * (1 - c.faith * 0.5) * pf * mul(c, 'war')) {
     const d = S.cultures[pick(c.nb)];
-    if (d && !d.war) {
+    const same = d && c.fid && c.fid === d.fid, holy = d && c.fid && d.fid && c.fid !== d.fid && c.faith > 0.4 && d.faith > 0.4 && R() < mul(c, 'holy');
+    if (d && !d.war && !allied(c.id, d.id) && (!same || R() < 0.5) && (holy || R() < 0.75)) {
       const w = { a: c.id, b: d.id, until: S.tick + Math.round((900 + R() * 4000) / Math.min(f, 6)) };
       S.wars.push(w); c.war = d.id; d.war = c.id; c.wars = (c.wars || 0) + 1; d.wars = (d.wars || 0) + 1; S.stats.wars = (S.stats.wars || 0) + 1;
-      addLog('war', 'War broke out between ' + nation(c) + ' and ' + nation(d) + '.');
+      addLog('war', (holy ? 'A holy war broke out between ' + nation(c) + ', followers of the ' + faithOf(c).name + ', and ' + nation(d) + ', followers of the ' + faithOf(d).name : 'War broke out between ' + nation(c) + ' and ' + nation(d)) + '.');
+      const helpers = alliesOf(d).filter(x => x !== c); if (helpers.length) addLog('diplo', helpers.map((x, i) => i ? nation(x) : Nation(x)).join(' and ') + ' sent soldiers to help their ally, ' + nation(d) + '.');
     }
   }
-  if ((c.cities || 0) >= 3 && R() < 0.000006 * pf * (knows(c, 'elec') ? 0.2 : 1)) { c.pop *= 0.7; c.sick = S.tick + Math.round(2 * DAY_T / Math.min(f, 6)); addLog('death', 'A plague swept through the cities of the ' + c.name + '.'); }
-  if (c.tiles > 200 && (c.cities || 0) >= 6 && S._ncul < 16 && R() < 0.000012 * pf * (1 - c.faith * 0.8) * (c.dark ? 5 : 1)) secede(c);
+  if ((c.cities || 0) >= 3 && R() < 0.000006 * pf * (knows(c, 'elec') ? 0.2 : 1) * mul(c, 'plague')) { c.pop *= 0.7; c.sick = S.tick + Math.round(2 * DAY_T / Math.min(f, 6)); addLog('death', 'A plague swept through the cities of the ' + c.name + '.'); }
+  if (c.tiles > 200 && (c.cities || 0) >= 6 && S._ncul < 16 && R() < 0.000012 * pf * (1 - c.faith * 0.8) * (c.dark ? 5 : 1) * mul(c, 'split')) secede(c);
   if (c.tiles < 6 && S.tick - c.born > 4000 && c.nb.length && R() < 0.0005 * pf) absorb(c);
+  else if (ageOf(c.tech) <= 1 && c.tiles > 45 && (c.cities || 0) >= 4 && S._ncul < 9 && R() < 0.000009 * pf) secede(c);
+}
+// people on the move: settlers looking for land, and refugees fleeing disaster or war
+function migrate(c) {
+  const cap = capitalOf(c); if (!cap) return;
+  let best = -1, bs = -1;
+  for (let k = 0; k < 400; k++) { const i = (R() * N) | 0; if (water[i] || own[i] || fert[i] < 0.35) continue; const d = distW(i, cap.i); if (d < 8 || d > 24) continue; const sc = fert[i] + R() * 0.3; if (sc > bs) { bs = sc; best = i; } }
+  if (best < 0) return;
+  if (distW(best, cap.i) > 13 && S._ncul < 16) {
+    const d = mkCulture(c.sp, best, c); claim(best, d.id); for (let k = 0; k < 8; k++) { const j = NB[best * 8 + k]; if (!water[j] && !own[j]) claim(j, d.id); }
+    const ct = foundCity(d, best, true), moved = c.pop * 0.08; c.pop -= moved; d.pop += moved; d.gov = govOf(d);
+    addLog('migr', 'A group of the ' + c.name + ' set out across the wild lands and founded a new people, the ' + d.name + ', at ' + ct.name + '.');
+  } else {
+    claim(best, c.id); const ct = foundCity(c, best, false);
+    addLog('migr', 'Settlers of the ' + c.name + ' made a long journey and founded ' + ct.name + ' far from home.');
+  }
+}
+function refugees(c, frac, why) {
+  const opts = alliesOf(c).concat(c.nb.map(id => S.cultures[id])).filter(d => d && d !== c && c.war !== d.id);
+  if (!opts.length) return;
+  const d = opts[0], moved = c.pop * frac; c.pop -= moved; d.pop += moved * 0.8; d.curio = Math.min(1, d.curio + 0.02);
+  addLog('migr', 'About ' + fmtNum(moved) + ' refugees fled ' + why + ' and found a new home among the ' + d.name + '.');
+}
+function fmtNum(n) { n = Math.round(n); return n < 1e4 ? n.toLocaleString('en-US') : n < 1e6 ? Math.round(n / 1e3) + ' thousand' : (n / 1e6).toFixed(1) + ' million'; }
+// people change nature: they tame some animals and push wild ones out of their lands
+function tame(c) {
+  const cnt = {};
+  for (const ct of S.cities) { if (ct.cul !== c.id) continue; area(ct.i % W, (ct.i / W) | 0, 10, j => { if (!sp[j] || water[j]) return; const s = S.species[sp[j]]; if (!s || s.hab === 0 || s.awoke || s.dom || s.cx < 2.5) return; cnt[s.id] = (cnt[s.id] || 0) + 1; }); }
+  const hasPet = (c.tamed || []).some(x => S.species[x] && S.species[x].diet), wt = k => cnt[k] * (S.species[k].diet ? (hasPet ? 0.3 : 1) : 3);
+  const id = Object.keys(cnt).sort((a, b) => wt(b) - wt(a))[0]; if (!id) return;
+  const s = S.species[id], what = s.size >= 9 && !s.diet ? pick(['mammoths', 'great beasts of burden', 'war elephants']) : s.diet ? pick(['hunting dogs', 'guard dogs', 'cats', 'hunting hawks']) : s.size >= 6 ? pick(['cattle', 'oxen', 'horses', 'camels', 'yaks']) : s.size >= 4 ? pick(['goats', 'sheep', 'pigs', 'llamas']) : pick(['dogs', 'cats', 'hens', 'ferrets']);
+  s.dom = c.id; s.domWhat = what; s.domBy = c.name; c.tamed = (c.tamed || []).concat([+id]);
+  S.dom = (S.dom || []).concat([{ name: s.name, what, by: c.name, at: STAMP || Date.now(), y: Math.floor(S.civYear + 1) }]).slice(-20);
+  addLog('life', 'The ' + c.name + ' tamed ' + s.name + '. They now keep them as ' + what + '.');
+}
+// natural disasters strike settlements and send people fleeing
+function disaster() {
+  const cs = S.cities.filter(x => S.cultures[x.cul]); if (!cs.length) return;
+  const ct = pick(cs), c = S.cultures[ct.cul], x = ct.i % W, y = (ct.i / W) | 0, r = R();
+  const coastal = [0, 1, 2, 3, 4, 5, 6, 7].some(k => water[NB[ct.i * 8 + k]]);
+  if (coastal && r < 0.35) { c.pop *= 0.92; const lost = !ct.cap && R() < 0.4; if (lost) S.cities = S.cities.filter(z => z !== ct); addLog('nature', 'A great flood swept over ' + ct.name + (lost ? ' and washed the town away.' : '. Thousands lost their homes.')); refugees(c, 0.03, 'the flood at ' + ct.name); }
+  else if (r < 0.6) { area(x, y, 3, (j, d) => { moist[j] = clamp(moist[j] - 45 * (1 - d * 0.5), 0, 255); }); retile(x, y, 3); c.pop *= 0.88; addLog('nature', 'Years of drought brought famine to the lands around ' + ct.name + '.'); refugees(c, 0.05, 'the famine around ' + ct.name); }
+  else if (r < 0.8) { c.pop *= 0.95; const lost = !ct.cap && R() < 0.5; if (lost) S.cities = S.cities.filter(z => z !== ct); S.fx.push({ t: 'quake', x, y, ttl: 6, r: 2 }); addLog('nature', 'An earthquake shook ' + ct.name + (lost ? ' and left it in ruins.' : '.')); }
+  else if (r < 0.92) { area(x, y, 2, (j, d) => { if (!water[j] && moist[j] > 120) moist[j] -= 20; }); retile(x, y, 2); c.pop *= 0.97; addLog('nature', 'A wildfire burned the forests around ' + ct.name + '.'); }
+  else { volcano(x, y, false); S.winter = Math.min(0.25, S.winter + 0.05); addLog('nature', 'A volcano erupted near ' + ct.name + '. Ash darkened the sky for years and summers grew cold.'); refugees(c, 0.04, 'the eruption near ' + ct.name); }
 }
 function absorb(c) {
   let best = null; for (const id of c.nb) { const d = S.cultures[id]; if (d && d !== c && (!best || d.tiles > best.tiles)) best = d; }
   if (!best) return;
   for (let i = 0; i < N; i++) if (own[i] === c.id) claim(i, best.id);
   for (const x of S.cities) if (x.cul === c.id) { x.cul = best.id; x.cap = 0; }
+  S.alliances = (S.alliances || []).filter(x => x.a !== c.id && x.b !== c.id);
+  if (S.fav === c.id) S.fav = best.id;
   addLog('nation', 'The ' + c.name + ' joined ' + nation(best) + ' and became one people.');
 }
 function secede(c) {
@@ -818,6 +1093,22 @@ function secede(c) {
   ct.cap = 1; recount(); d.gov = govOf(d);
   addLog('nation', 'The people of ' + ct.name + ' broke away from ' + nation(c) + ' and founded ' + nation(d) + '.');
 }
+function allied(a, b) { return (S.alliances || []).some(x => (x.a === a && x.b === b) || (x.a === b && x.b === a)); }
+function alliesOf(c) { return (S.alliances || []).filter(x => x.a === c.id || x.b === c.id).map(x => S.cultures[x.a === c.id ? x.b : x.a]).filter(Boolean); }
+function diplomacy(c, pf) {
+  if (ageOf(c.tech) < 1 || !c.nb.length) return;
+  if (alliesOf(c).length < 2 && R() < 0.000012 * pf * (0.5 + ((c.pw && c.pw.dip) || 50) / 100)) {
+    const d = S.cultures[pick(c.nb)];
+    if (d && d !== c && c.war !== d.id && !allied(c.id, d.id) && alliesOf(d).length < 2 && ageOf(d.tech) >= 1) {
+      const both = k => (c.civics || []).includes(k) && (d.civics || []).includes(k);
+      const score = (c.fid && c.fid === d.fid ? 1 : 0) + (both('trade') ? 1 : 0) + (both('pacifism') ? 1 : 0) + (1 - (c.aggr + d.aggr) / 2) - (both('isolation') ? 1 : 0);
+      if (R() < 0.25 + score * 0.2) {
+        S.alliances = (S.alliances || []).concat([{ a: c.id, b: d.id, at: STAMP || Date.now(), y: Math.floor(S.civYear + 1) }]);
+        addLog('diplo', Nation(c) + ' and ' + nation(d) + ' signed an alliance' + (c.fid && c.fid === d.fid ? ', united by the ' + faithOf(c).name : '') + '.');
+      }
+    }
+  }
+}
 function atWar(a, b) { const c = S.cultures[a]; return c && c.war === b; }
 function civStep() {
   const cs = Object.values(S.cultures);
@@ -828,39 +1119,46 @@ function civStep() {
   for (let n = 0; n < K_CIV; n++) {
     const i = (R() * N) | 0, cid = own[i]; if (!cid) continue;
     const c = S.cultures[cid]; if (!c) { own[i] = 0; continue; }
+    if (sp[i] && !water[i]) { const ws = S.species[sp[i]]; if (ws && !ws.awoke && ws.dom !== cid && R() < 0.0006 * (1 + ageOf(c.tech) * 0.7) * pf * Math.min(1.2, c.pop / capOf(c))) { ws.hunted = c.name; ws.huntedT = S.tick; const tm = (c.tamed || []).filter(id => S.species[id]); setSp(i, tm.length && R() < 0.5 ? pick(tm) : 0); } }
     const j = NB[i * 8 + ((R() * 8) | 0)], o = own[j];
     const press = c.pop / capOf(c), age = ageOf(c.tech);
     if (water[j]) {
-      if (water[i] === 0 && knows(c, 'sail') && R() < 0.015 * pf * (knows(c, 'nav') ? 3 : 1)) {
+      if (water[i] === 0 && knows(c, 'sail') && R() < 0.015 * pf * (knows(c, 'nav') ? 3 : 1) * mul(c, 'sea')) {
         const dx = (j % W) - (i % W), dy = ((j / W) | 0) - ((i / W) | 0); let x = i % W, y = (i / W) | 0;
         const reach = knows(c, 'nav') ? 22 : 7;
         for (let st = 0; st < reach; st++) {
           x = (x + dx + W) % W; y += dy; if (y < 0 || y >= H) break;
           const k = y * W + x;
-          if (!water[k]) { if (!own[k] && fert[k] > 0.1) { claim(k, cid); if (R() < 0.6 && S.cities.every(m => distW(m.i, k) >= 2.2)) { const ct = foundCity(c, k, false); if (!S.firsts['sea' + cid]) { S.firsts['sea' + cid] = 1; addLog('city', 'Sailors of the ' + c.name + ' crossed the sea and founded ' + ct.name + ' on a far shore.'); } } } break; }
+          if (!water[k]) { if (!own[k] && fert[k] > 0.1) { claim(k, cid); if (R() < 0.6 && S.cities.every(m => distW(m.i, k) >= 2.2)) { const ct = foundCity(c, k, false); if (!S.firsts['sea' + cid]) { S.firsts['sea' + cid] = 1; const ex = word(c.syl, 2); addFamous(c, ex, 'explorer who crossed the sea and founded ' + ct.name); addLog('hero', 'The explorer ' + ex + ' led sailors of the ' + c.name + ' across the sea and founded ' + ct.name + ' on a far shore.'); } } } break; }
         }
       }
       continue;
     }
     if (!o) {
-      if (R() < pf * (0.03 + 0.4 * press) * (0.12 + 0.14 * age) * (0.3 + fert[j])) claim(j, cid);
+      if (R() < pf * (0.03 + 0.4 * press) * (0.08 + 0.15 * age) * (0.3 + fert[j]) * mul(c, 'exp')) claim(j, cid);
     } else if (o !== cid) {
       const d = S.cultures[o]; if (!d) { own[j] = 0; continue; }
       if (c.nb.indexOf(o) < 0) { c.nb.push(o); if (c.nb.length > 8) c.nb.shift(); }
       if (d.nb.indexOf(cid) < 0) { d.nb.push(cid); if (d.nb.length > 8) d.nb.shift(); }
       if (atWar(cid, o)) {
-        const sa = Math.log10(c.pop + 10) * (1 + c.tech * 0.12) * (0.7 + c.aggr * 0.5), sb = Math.log10(d.pop + 10) * (1 + d.tech * 0.12) * (0.9 + d.faith * 0.3);
+        const sa = (1 + 0.15 * alliesOf(c).length) * Math.log10(c.pop + 10) * (1 + c.tech * 0.12) * (0.7 + c.aggr * 0.5) * (0.6 + ((c.pw && c.pw.mil) || 50) / 125), sb = (1 + 0.15 * alliesOf(d).length) * Math.log10(d.pop + 10) * (1 + d.tech * 0.12) * (0.9 + d.faith * 0.3) * (0.6 + ((d.pw && d.pw.mil) || 50) / 125);
         if (sa * (0.6 + R() * 0.8) > sb) {
           claim(j, cid);
           const ct = cityAt(j);
           if (ct && ct.cul !== cid) {
             const wasCap = ct.cap; ct.cul = cid; ct.cap = 0;
-            if (wasCap) { addLog('war', Nation(c) + ' captured ' + ct.name + ', the capital of the ' + d.name + '.'); const rest = S.cities.find(x => x.cul === d.id); if (rest) rest.cap = 1; if (!d.dark && R() < 0.5) { d.golden = 0; d.dark = S.tick + Math.round((3 + R() * 5) * DAY_T / Math.min(f, 6)); addLog('death', 'Losing its capital threw ' + nation(d) + ' into a dark age.'); } }
+            if (wasCap) { const gen = word(c.syl, 2); addFamous(c, gen, 'general who captured ' + ct.name); epithet_(c, 'the Conqueror'); addLog('war', 'General ' + gen + ' of ' + nation(c) + ' captured ' + ct.name + ', the capital of the ' + d.name + '.'); const rest = S.cities.find(x => x.cul === d.id); if (rest) rest.cap = 1; refugees(d, 0.04, 'the fall of ' + ct.name); if (!d.dark && R() < 0.5) { d.golden = 0; d.dark = S.tick + Math.round((3 + R() * 5) * DAY_T / Math.min(f, 6)); addLog('death', 'Losing its capital threw ' + nation(d) + ' into a dark age.'); } }
           }
         }
-      } else if (c.tech - d.tech >= 4 && R() < 0.01 * pf) claim(j, cid);
+      } else {
+        if (c.tech - d.tech >= 4 && R() < 0.01 * pf) claim(j, cid);
+        if (c.fid && c.fid !== d.fid && R() < 0.0001 * pf * (0.5 + c.faith) * (d.fid ? 0.35 * (1.2 - d.faith) : 1) * mul(c, 'spread') * mul(d, 'spreadIn')) {
+          const fz = S.faiths[c.fid]; if (fz) { const was = faithOf(d); d.fid = c.fid; d.faith = Math.max(0.3, d.faith * 0.8); addLog('faith', 'Missionaries from the ' + c.name + ' spread the ' + fz.name + ' to the ' + d.name + (was ? ', who gave up the ' + was.name : '') + '.'); }
+        }
+      }
     }
   }
+  if (S.alliances && S.alliances.length) for (let k = S.alliances.length - 1; k >= 0; k--) { const al = S.alliances[k], a = S.cultures[al.a], b = S.cultures[al.b]; if (!a || !b) { S.alliances.splice(k, 1); continue; } if (R() < 0.0000025 * pf) { S.alliances.splice(k, 1); addLog('diplo', 'The alliance between ' + nation(a) + ' and ' + nation(b) + ' came to an end.'); } }
   for (let k = S.wars.length - 1; k >= 0; k--) {
     const w = S.wars[k], a = S.cultures[w.a], b = S.cultures[w.b];
     if (!a || !b || S.tick > w.until) {
@@ -869,8 +1167,9 @@ function civStep() {
     }
   }
   for (const c of cs) if (c.tiles <= 0) {
-    delete S.cultures[c.id]; S.cities = S.cities.filter(x => x.cul !== c.id);
+    delete S.cultures[c.id]; S.cities = S.cities.filter(x => x.cul !== c.id); S.alliances = (S.alliances || []).filter(x => x.a !== c.id && x.b !== c.id);
     addLog('death', 'The ' + c.name + ' vanished from history.');
+    if (S.fav === c.id) { S.fav = 0; addLog('big', 'The nation you followed, the ' + c.name + ', has vanished from history.'); }
   }
   for (const ct of S.cities) if (own[ct.i] !== ct.cul) { const n = own[ct.i]; if (n && S.cultures[n]) { ct.cul = n; ct.cap = 0; } else ct.dead = 1; }
   if (S.cities.some(x => x.dead)) S.cities = S.cities.filter(x => !x.dead);
@@ -890,6 +1189,31 @@ function settlements() {
     } else if (t < ct.tier - 1) ct.tier = t + 1;
   }
   for (const c of Object.values(S.cultures)) updateGov(c);
+  computePower();
+}
+// power ratings from 0 to 100, compared with the strongest nation in each field
+const PW = [['mil', 'Military'], ['sci', 'Science'], ['eco', 'Economy'], ['dip', 'Diplomacy'], ['cul', 'Culture'], ['fai', 'Faith']];
+function computePower() {
+  const cs = Object.values(S.cultures); if (!cs.length) return;
+  const raw = {};
+  for (const c of cs) {
+    const lp = Math.log10(c.pop + 10), cities = c.cities || 0;
+    let peace = 0, shared = 0; for (const id of c.nb) { const d = S.cultures[id]; if (!d) continue; if (c.war !== id) peace++; if (c.fid && d.fid === c.fid) shared++; }
+    raw[c.id] = {
+      mil: lp * (1 + c.tech * 0.15) * (0.6 + c.aggr) * (c.war ? 1.1 : 1) * mul(c, 'mil'),
+      sci: (c.lastRate || 1) * (1 + c.tech * 0.1) * (0.5 + c.curio) * mul(c, 'sci'),
+      eco: lp * Math.sqrt(cities + 1) * (1 + c.tech * 0.08) * (1 + 0.1 * peace) * (c.golden ? 1.3 : 1) * (c.dark ? 0.7 : 1) * mul(c, 'eco'),
+      dip: (1 + peace + shared * 1.5) * (1.3 - c.aggr) * (c.war ? 0.6 : 1) * mul(c, 'dip'),
+      cul: (1 + (c.wonders || 0) * 2 + (c.famous || []).length * 0.6 + lp) * (c.golden ? 1.3 : 1) * mul(c, 'cul'),
+      fai: (c.fid ? 1 : 0.25) * (0.2 + c.faith) * (1 + 0.3 * shared) * mul(c, 'fai'),
+    };
+  }
+  for (const [k] of PW) { let mx = 0; for (const c of cs) mx = Math.max(mx, raw[c.id][k]); for (const c of cs) { c.pw = c.pw || {}; c.pw[k] = mx > 0 ? Math.max(1, Math.round(raw[c.id][k] / mx * 100)) : 0; } }
+  for (const c of cs) { const p = c.pw; p.all = Math.round((p.mil * 1.2 + p.sci * 1.2 + p.eco * 1.2 + p.dip * 0.8 + p.cul * 0.8 + p.fai * 0.6) / 5.8); }
+  const top = cs.slice().sort((a, b) => b.pw.all - a.pw.all)[0];
+  // announce a new leader only when it clearly leads, and not more than once a day
+  const second = cs.slice().sort((a, b) => b.pw.all - a.pw.all)[1], now = STAMP || Date.now();
+  if (top && top.id !== S.topPower && cs.length >= 3 && (!second || top.pw.all - second.pw.all >= 6) && now - (S.topAt || 0) > 86400e3) { if (S.topPower) addLog('nation', Nation(top) + ' is now the most powerful nation in the world.'); S.topPower = top.id; S.topAt = now; }
 }
 function recount() {
   for (const c of Object.values(S.cultures)) { c.tiles = 0; c.fs = 0; c.cities = 0; c.wsum = 0; }
@@ -921,16 +1245,36 @@ function sample(at) {
   const cs = Object.values(S.cultures), n = Z.t.length;
   Z.t.push(at); Z.y.push(S.civStart != null ? Math.floor(S.civYear + 1) : -Math.round(S.years / 1e5) / 10);
   Z.pop.push(encP(cs.reduce((a, c) => a + c.pop, 0))); Z.sp.push(S.spCount || 0); Z.set.push(S.cities.length); Z.nat.push(cs.length);
-  for (const c of cs) { if (!Z.c[c.id]) Z.c[c.id] = new Array(n).fill(0); Z.c[c.id].push(encP(c.pop)); Z.nm[c.id] = [c.name, c.hue]; }
+  const hb = [0, 0, 0]; let mind = 0, big = 0; for (const x of Object.values(S.species)) { hb[x.hab]++; if (x.tiles >= 5) { mind = Math.max(mind, x.iq); big = Math.max(big, x.size * (x.cx >= 1.2 ? 1 : 0)); } }
+  for (const k of ['sea', 'shore', 'land', 'mind', 'big']) if (!Z[k]) Z[k] = new Array(n).fill(0);
+  Z.sea.push(hb[0]); Z.shore.push(hb[1]); Z.land.push(hb[2]); Z.mind.push(Math.round(mind * 10)); Z.big.push(big);
+  if (!Z.p) Z.p = {};
+  for (const c of cs) { if (!Z.c[c.id]) Z.c[c.id] = new Array(n).fill(0); Z.c[c.id].push(encP(c.pop)); Z.nm[c.id] = [c.name, c.hue]; if (!Z.p[c.id]) Z.p[c.id] = new Array(n).fill(0); Z.p[c.id].push(c.pw ? c.pw.all : 0); }
   for (const id in Z.c) if (Z.c[id].length < n + 1) Z.c[id].push(0);
+  for (const id in Z.p) { while (Z.p[id].length < n) Z.p[id].unshift(0); if (Z.p[id].length < n + 1) Z.p[id].push(0); }
   if (Z.t.length > 180) {
     const half = a => a.filter((v, i) => i % 2 === 0 || i === a.length - 1);
-    for (const k of ['t', 'y', 'pop', 'sp', 'set', 'nat']) Z[k] = half(Z[k]);
+    for (const k of ['t', 'y', 'pop', 'sp', 'set', 'nat', 'sea', 'shore', 'land', 'mind', 'big']) if (Z[k]) Z[k] = half(Z[k]);
     for (const id in Z.c) Z.c[id] = half(Z.c[id]);
+    for (const id in Z.p || {}) Z.p[id] = half(Z.p[id]);
     Z.iv *= 2;
   }
   const ids = Object.keys(Z.c);
-  if (ids.length > 24) { const dead = ids.filter(id => !S.cultures[id]).sort((a, b) => Math.max(...Z.c[a]) - Math.max(...Z.c[b])); for (const id of dead.slice(0, ids.length - 24)) { delete Z.c[id]; delete Z.nm[id]; } }
+  if (ids.length > 24) { const dead = ids.filter(id => !S.cultures[id]).sort((a, b) => Math.max(...Z.c[a]) - Math.max(...Z.c[b])); for (const id of dead.slice(0, ids.length - 24)) { delete Z.c[id]; delete Z.nm[id]; if (Z.p) delete Z.p[id]; } }
+}
+function climateStep(civ) {
+  const now = STAMP || Date.now(), D = 86400e3;
+  if (!S.climNext) { S.climNext = now + (10 + R() * 20) * D; S.clim = S.clim || 0; S.climT = S.climT || 0; }
+  if (now > S.climNext && civ) {
+    const r = R(), cur = S.climT || 0;
+    if (cur < -0.03) { S.climT = 0; addLog('nature', 'The ice age is ending. Glaciers melt and the seasons grow mild again.'); }
+    else if (cur > 0.03) { S.climT = 0; addLog('nature', 'The warm period is fading. The world returns to its usual climate.'); }
+    else if (r < 0.5) { S.climT = -(0.05 + R() * 0.08); addLog('nature', 'The world is cooling. ' + (S.climT < -0.09 ? 'A great ice age' : 'A little ice age') + ' has begun, and harvests in the north will suffer.'); }
+    else { S.climT = 0.03 + R() * 0.05; addLog('nature', 'A warm period has begun. Ice retreats and forests spread toward the poles.'); }
+    S.climNext = now + (cur === 0 ? 6 + R() * 10 : 12 + R() * 25) * D;
+  }
+  const rate = 0.1 / (3 * D) * tickMs() * fastF();
+  if (S.climT != null && Math.abs(S.climT - S.clim) > 1e-4) S.clim += Math.sign(S.climT - S.clim) * Math.min(rate, Math.abs(S.climT - S.clim));
 }
 function tickMs() { return S.civStart != null ? TICK_CIV : TICK_LIFE; }
 function step() {
@@ -948,15 +1292,18 @@ function step() {
   }
   if (S.winter > 0) S.winter = Math.max(0, S.winter - (civ ? 0.0012 : 0.00012) * fastF());
   if (S.radiation > 0) S.radiation--;
-  if (Math.abs((S.gt - S.winter) - S._tempKey) > 0.008) { computeAll(); if (civ) recount(); }
+  climateStep(civ);
+  if (Math.abs((S.gt - S.winter + (S.clim || 0)) - S._tempKey) > 0.008) { computeAll(); if (civ) recount(); }
   for (let k = S.boosts.length - 1; k >= 0; k--) if ((S.boosts[k].ttl -= (civ ? 10 : 1)) <= 0) S.boosts.splice(k, 1);
   for (let k = S.fx.length - 1; k >= 0; k--) if (--S.fx[k].ttl <= 0) S.fx.splice(k, 1);
   if (!civ && R() < 1 / 40000 && S.tick > 3000) naturalMeteor((R() * N) | 0);
   if (R() < (civ ? 1 / 60000 : 1 / 9000) * fastF()) { let i = (R() * N) | 0; for (let t = 0; t < 50 && water[i]; t++) i = (R() * N) | 0; if (!water[i]) volcano(i % W, (i / W) | 0, true); }
-  if (S.tick % 300 === 0) checkDominant();
+  if (civ && R() < fastF() / 13000) disaster();
+  if (S.tick % 300 === 0) { checkDominant(); if (S.faiths) for (const fz of Object.values(S.faiths)) if (!fz.ended && !Object.values(S.cultures).some(c => c.fid === fz.id)) { fz.ended = STAMP || Date.now(); addLog('faith', 'No one follows the ' + fz.name + ' any more. It lives on only in old books.'); } }
   if (S.tick % 5 === 0) sample(STAMP || Date.now());
 }
 function checkDominant() {
+  if (S.tree) for (const s of Object.values(S.species)) { const T = S.tree[s.uid]; if (T) { T[6] = Math.max(T[6], s.peak); T[7] = +s.iq.toFixed(1); T[0] = s.name; } }
   let best = null; for (const s of Object.values(S.species)) if (!best || s.tiles > best.tiles) best = s;
   if (best && best.id !== S.domId && best.tiles > 300) { S.domId = best.id; if (S.civStart == null) addLog('life', best.name + ' is now the most widespread creature in the world.'); }
 }
@@ -1057,7 +1404,7 @@ function usePower(key, x, y, now) {
       if (c.inspired === c.tech) return { ok: false, msg: 'The ' + c.name + ' are still thinking about your last idea. Try again after their next discovery.' };
       c.inspired = c.tech; c.rp += techCost(c.tech) * 0.3; log = 'You whispered an idea to a dreamer of the ' + c.name + '. They woke thinking about ' + TECHS[c.tech][0].toLowerCase() + '.'; break;
     case 'prophet': if (!c) return { ok: false, msg: 'Prophets speak to a people. Choose land they live on.' };
-      c.faith = Math.min(1, c.faith + 0.35); c.aggr = Math.max(0.05, c.aggr - 0.15); if (c.dark) c.dark = S.tick + 1; log = 'You sent a prophet to the ' + c.name + '. The ' + c.faithName + ' filled their hearts with peace.'; break;
+      c.faith = Math.min(1, c.faith + 0.35); c.aggr = Math.max(0.05, c.aggr - 0.15); if (c.dark) c.dark = S.tick + 1; if (!c.fid) { const nf = foundFaith(c); log = 'You sent a prophet to the ' + c.name + '. They founded the ' + nf.name + ', and their hearts filled with peace.'; } else log = 'You sent a prophet to the ' + c.name + '. The ' + faithOf(c).name + ' filled their hearts with peace.'; break;
     case 'bounty': if (!c) return { ok: false, msg: 'Choose land where a people lives.' };
       c.pop = Math.min(capOf(c) * 1.2, c.pop * 1.5 + 50); for (const ct of S.cities) if (ct.cul === c.id) ct.w *= 1.15; log = 'You blessed the fields of the ' + c.name + ' with a bountiful year.'; break;
   }
@@ -1072,8 +1419,8 @@ function unb64(str) { const s = atob(str), u = new Uint8Array(s.length); for (le
 function serialize(now) {
   S.savedAt = now;
   const o = Object.assign({}, S);
-  o.species = Object.values(S.species).map(s => [s.id, s.name, s.peak, s.gen, s.est, s.hab, +s.heat.toFixed(2), s.size, s.diet, +s.cx.toFixed(1), +s.iq.toFixed(1), Math.round(s.hue), s.awoke ? 1 : 0]);
-  o.cultures = Object.values(S.cultures).map(c => { const x = Object.assign({}, c); delete x._c; return x; });
+  o.species = Object.values(S.species).map(s => [s.id, s.name, s.peak, s.gen, s.est, s.hab, +s.heat.toFixed(2), s.size, s.diet, +s.cx.toFixed(1), +s.iq.toFixed(1), Math.round(s.hue), s.awoke ? 1 : 0, Math.round((s.bornAt || 0) / 1000), s.peak >= 30 && !s.anc ? s.parentName || '' : '', s.uid || 0, s.puid || 0, s.anc || 0, s.dom ? [s.dom, s.domWhat, s.domBy] : 0]);
+  o.cultures = Object.values(S.cultures).map(c => { const x = Object.assign({}, c); delete x._c; if (x.rn) { const keep = new Set((x.rulers || []).concat(x.ruler ? [x.ruler] : []).map(r => r.n.replace(/ [IVX]+$/, ''))); x.rn = Object.fromEntries(Object.entries(x.rn).filter(([k, v]) => v > 1 || keep.has(k))); } x.rp = Math.round(x.rp); x.pop = Math.round(x.pop); x.peak = Math.round(x.peak || 0); x.fs = +(+x.fs).toFixed(2); return x; });
   o.cities = S.cities.map(ct => ({ i: ct.i, name: ct.name, cul: ct.cul, born: ct.born, cap: ct.cap, w: +ct.w.toFixed(3), tier: ct.tier, bornAt: ct.bornAt }));
   o.maps = { h: b64(height), m: b64(moist), s: b64(new Uint8Array(sp.buffer)), o: b64(new Uint8Array(own.buffer)) };
   delete o._tempKey;
@@ -1085,28 +1432,29 @@ function deserialize(str) {
   height.set(unb64(o.maps.h)); moist.set(unb64(o.maps.m));
   sp.set(new Uint16Array(unb64(o.maps.s).buffer)); own.set(new Uint16Array(unb64(o.maps.o).buffer));
   const species = {};
-  for (const a of o.species) species[a[0]] = { id: a[0], name: a[1], genus: a[1].split(' ')[0], parent: 0, born: 0, peak: a[2], gen: a[3], est: a[4], hab: a[5], heat: a[6], size: a[7], diet: a[8], cx: a[9], iq: a[10], hue: a[11], awoke: a[12], tiles: 0 };
+  for (const a of o.species) species[a[0]] = { id: a[0], name: a[1], genus: a[1].split(' ')[0], parent: 0, born: 0, peak: a[2], gen: a[3], est: a[4], hab: a[5], heat: a[6], size: a[7], diet: a[8], cx: a[9], iq: a[10], hue: a[11], awoke: a[12], bornAt: (a[13] || 0) < 1e11 ? (a[13] || 0) * 1000 : a[13], parentName: a[14] || '', uid: a[15] || 0, puid: a[16] || 0, anc: a[17] || 0, dom: a[18] ? a[18][0] : 0, domWhat: a[18] ? a[18][1] : '', domBy: a[18] ? a[18][2] : '', tiles: 0 };
   const cultures = {}; for (const c of o.cultures) cultures[c.id] = c;
   delete o.maps; o.species = species; o.cultures = cultures;
+
   S = o; S.fast = 1;
   for (let i = 0; i < N; i++) { const id = sp[i]; if (id) { const s = species[id]; if (s) s.tiles++; else sp[i] = 0; } }
   for (const s of Object.values(species)) if (!s.tiles) delete species[s.id];
   S.spCount = Object.keys(species).length;
-  computeAll(); recount();
+  computeAll(); recount(); upgradeWorld();
   return S;
 }
 
-if (typeof module !== 'undefined' && typeof window === 'undefined') module.exports = { decP, paceOf, get S() { return S; }, set STAMP(v) { STAMP = v; }, newWorld, step, serialize, deserialize, usePower, eraName, dateLabel, tickMs, sp, own, W, H, N, TECHS, AGES, ageOf, popOf, tierOf, setTech(b) { TECH_SCALE = b; } };
+if (typeof module !== 'undefined' && typeof window === 'undefined') module.exports = { langOf, alliesOf, GOVS, CIVICS, PW, worldAge, fmtAge, speciesPop, upgradeWorld, decP, paceOf, get S() { return S; }, set STAMP(v) { STAMP = v; }, newWorld, step, serialize, deserialize, usePower, eraName, dateLabel, tickMs, sp, own, W, H, N, TECHS, AGES, ageOf, popOf, tierOf, setTech(b) { TECH_SCALE = b; } };
 
 // ===== Worldseed interface (globe) =====
 (function () {
   const $ = s => document.querySelector(s);
   const KEY = 'worldseed.save.v2';
   const SUN_DAY = 12 * 60 * 1000; // the sun circles the globe every 12 minutes
-  const KIND = { life: '#72d4a6', big: '#e9b54d', death: '#e27d6c', war: '#f0604c', peace: '#82b5ea', tech: '#b7a0f2', city: '#dac28c', nature: '#5fc2c6', nation: '#e79ac4', culture: '#8fd0e8', wonder: '#f3d27e', you: '#f4f1ea' };
-  const KLABEL = { life: 'Life', big: 'Milestone', death: 'Loss', war: 'War', peace: 'Peace', tech: 'Discovery', city: 'Settlement', nature: 'Nature', nation: 'Nation', culture: 'Culture', wonder: 'Wonder', you: 'You' };
-  const FILTERS = [['all', 'All'], ['you', 'Your actions'], ['disc', 'Discoveries'], ['nat', 'Nations'], ['cul', 'Culture'], ['war', 'Wars & disasters'], ['life', 'Life']];
-  const FMAP = { you: ['you'], disc: ['tech', 'big'], nat: ['nation', 'city', 'wonder'], cul: ['culture', 'wonder'], war: ['war', 'peace', 'death', 'nature'], life: ['life'] };
+  const KIND = { diplo: '#7fd6b7', migr: '#d6c08f', faith: '#f2a65a', ruler: '#d9b3ff', hero: '#9fe0c9', life: '#72d4a6', big: '#e9b54d', death: '#e27d6c', war: '#f0604c', peace: '#82b5ea', tech: '#b7a0f2', city: '#dac28c', nature: '#5fc2c6', nation: '#e79ac4', culture: '#8fd0e8', wonder: '#f3d27e', you: '#f4f1ea' };
+  const KLABEL = { diplo: 'Diplomacy', migr: 'Migration', faith: 'Faith', ruler: 'Ruler', hero: 'Famous', life: 'Life', big: 'Milestone', death: 'Loss', war: 'War', peace: 'Peace', tech: 'Discovery', city: 'Settlement', nature: 'Nature', nation: 'Nation', culture: 'Culture', wonder: 'Wonder', you: 'You' };
+  const FILTERS = [['all', 'All'], ['fav', 'Followed nation'], ['you', 'Your actions'], ['disc', 'Discoveries'], ['nat', 'Nations & rulers'], ['faith', 'Faiths'], ['cul', 'Culture & heroes'], ['war', 'Wars & disasters'], ['life', 'Life']];
+  const FMAP = { you: ['you'], disc: ['tech', 'big'], nat: ['nation', 'city', 'wonder', 'ruler', 'diplo', 'migr'], faith: ['faith'], cul: ['culture', 'wonder', 'hero'], war: ['war', 'peace', 'death', 'nature'], life: ['life'] };
   const HAB = ['Sea', 'Shore', 'Land'];
   const SIZE = ['', 'Tiny', 'Tiny', 'Small', 'Small', 'Medium', 'Medium', 'Large', 'Large', 'Giant', 'Giant'];
   const ICONS = {
@@ -1282,6 +1630,11 @@ void main(){
       if (mode === 'life') {
         const m = (r + g + b) / 3; r = r * 0.25 + m * 0.2; g = g * 0.25 + m * 0.2; b = b * 0.25 + m * 0.22 + 6;
         if (s) { const c = spRGB(s), a = 0.85; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+      } else if (mode === 'faiths') {
+        const m = (r + g + b) / 3; r = r * 0.4 + m * 0.25; g = g * 0.4 + m * 0.25; b = b * 0.4 + m * 0.25;
+        const fz = o ? faithOf(o) : null;
+        if (fz) { const c = fz._c || (fz._c = hsl(fz.hue, 0.75, 0.6)), a = 0.75; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
+        else if (o) { r = r * 0.7 + 60; g = g * 0.7 + 60; b = b * 0.7 + 60; }
       } else if (mode === 'peoples') {
         const m = (r + g + b) / 3; r = r * 0.45 + m * 0.25; g = g * 0.45 + m * 0.25; b = b * 0.45 + m * 0.25;
         if (o) { const c = culRGB(o), a = 0.7; r = r * (1 - a) + c[0] * a; g = g * (1 - a) + c[1] * a; b = b * (1 - a) + c[2] * a; }
@@ -1379,14 +1732,14 @@ void main(){
       octx.textAlign = 'center'; octx.textBaseline = 'middle';
       for (const ct of caps) {
         const p = projTile(ct.i); if (p.z < 0.25) continue; const c = S.cultures[ct.cul];
-        const fs = clamp(11 + zoom * 1.5 + Math.min(4, c.tiles / 120), 11, 19), label = c.gov === 'Tribe' ? c.name : c.name.toUpperCase();
+        const fs = clamp(11 + zoom * 1.5 + Math.min(4, c.tiles / 120), 11, 19), label = (S.fav === c.id ? '\u2605 ' : '') + (c.gov === 'Tribe' ? c.name : c.name.toUpperCase());
         octx.font = '700 ' + fs + 'px Syne, Figtree, sans-serif'; const wdt = octx.measureText(label).width + (c.gov === 'Tribe' ? 0 : label.length * 1.5);
         const y = p.y - 11 - fs / 2;
         if (!free(p.x - wdt / 2, y - fs / 2, wdt, fs)) continue;
         octx.globalAlpha = clamp((p.z - 0.25) * 3, 0, 1);
         if (octx.letterSpacing !== undefined) octx.letterSpacing = c.gov === 'Tribe' ? '0px' : '1.5px';
         octx.lineWidth = 3.5; octx.strokeStyle = 'rgba(5,9,11,.8)'; octx.strokeText(label, p.x, y);
-        octx.fillStyle = mode === 'peoples' ? '#fff' : css(hsl(c.hue, 0.6, 0.82)); octx.fillText(label, p.x, y);
+        octx.fillStyle = S.fav === c.id ? '#f3c766' : mode === 'peoples' ? '#fff' : css(hsl(c.hue, 0.6, 0.82)); octx.fillText(label, p.x, y);
         octx.globalAlpha = 1;
         // capital marker
         octx.fillStyle = '#fff'; octx.strokeStyle = 'rgba(5,9,11,.9)'; octx.lineWidth = 1.5; octx.beginPath(); const s = 3.5; octx.moveTo(p.x, p.y - s); octx.lineTo(p.x + s, p.y); octx.lineTo(p.x, p.y + s); octx.lineTo(p.x - s, p.y); octx.closePath(); octx.fill(); octx.stroke();
@@ -1403,6 +1756,35 @@ void main(){
         }
       }
     }
+    // trade routes between neighbours at peace, with caravans moving along them
+    if (mode !== 'life' && S.civStart != null) {
+      const done = new Set(); octx.lineWidth = 1.4;
+      for (const c of Object.values(S.cultures)) {
+        if (ageOf(c.tech) < 1) continue; const a = capitalOf(c); if (!a) continue;
+        for (const id of c.nb) {
+          const d = S.cultures[id]; if (!d || ageOf(d.tech) < 1 || c.war === d.id) continue;
+          const key = Math.min(c.id, d.id) + '-' + Math.max(c.id, d.id); if (done.has(key)) continue; done.add(key);
+          const b = capitalOf(d); if (!b) continue;
+          const al = allied(c.id, d.id), A = vec(...tileLL(a.i)), B = vec(...tileLL(b.i));
+          octx.strokeStyle = al ? 'rgba(127,214,183,.75)' : 'rgba(243,210,126,.6)'; octx.setLineDash(al ? [] : [4, 5]); octx.lineDashOffset = -t / 120;
+          octx.beginPath(); let on = false;
+          for (let k = 0; k <= 24; k++) { const f = k / 24, lift = 1 + Math.sin(f * Math.PI) * 0.03, w = [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f], l = Math.hypot(...w) || 1, p = project(w.map(v => v / l * lift)); if (p.z < 0.02) { on = false; continue; } if (on) octx.lineTo(p.x, p.y); else { octx.moveTo(p.x, p.y); on = true; } }
+          octx.stroke();
+        }
+      }
+      octx.setLineDash([]);
+    }
+    // the moon, and satellites once someone reaches space
+    const moonA = (Date.now() / (40 * 60e3)) * 2 * Math.PI, mw = [Math.cos(moonA) * 1.55, 0.18 * Math.sin(moonA * 0.7), Math.sin(moonA) * 1.55], mp = project(mw), mr = Math.max(5, radius * 0.11);
+    const behind = mp.z < 0 && Math.hypot(mp.x - cw / 2, mp.y - ch / 2) < radius + mr;
+    if (!behind) { const g = octx.createRadialGradient(mp.x - mr * 0.3, mp.y - mr * 0.3, mr * 0.1, mp.x, mp.y, mr); g.addColorStop(0, '#d9d6cf'); g.addColorStop(1, '#6d6a66'); octx.fillStyle = g; octx.beginPath(); octx.arc(mp.x, mp.y, mr, 0, 7); octx.fill(); if (Object.values(S.cultures).some(c => c.tech > 33)) { octx.fillStyle = '#ffe3a0'; octx.beginPath(); octx.arc(mp.x + mr * 0.2, mp.y + mr * 0.15, 1.6, 0, 7); octx.fill(); } }
+    const spaceN = Object.values(S.cultures).reduce((a, c) => a + Math.max(0, c.tech - 30), 0);
+    for (let k = 0; k < Math.min(30, spaceN * 3); k++) {
+      const inc = (k * 0.61) % 1.4 - 0.7, sp_ = 0.00012 + (k % 5) * 0.00003, ph = Date.now() * sp_ / 1000 * 60 + k * 2.1, rr = 1.06 + (k % 4) * 0.035;
+      const w = [Math.cos(ph) * rr, Math.sin(ph) * Math.sin(inc) * rr, Math.sin(ph) * Math.cos(inc) * rr], p = project(w);
+      if (p.z < 0 && Math.hypot(p.x - cw / 2, p.y - ch / 2) < radius) continue;
+      octx.fillStyle = '#e8f1ff'; octx.fillRect(p.x - 1.2, p.y - 1.2, 2.4, 2.4);
+    }
     // monoliths and sparks
     for (const b of S.boosts) {
       const p = projTile(b.y * W + b.x); if (p.z < 0.1) continue;
@@ -1417,6 +1799,11 @@ void main(){
       if (f.t === 'flash') { const a = Math.max(0, 1 - age / 3), rr = (f.r || 5) * radius * 0.05 * (1 + age); const g = octx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr); g.addColorStop(0, 'rgba(255,250,230,' + a + ')'); g.addColorStop(0.5, 'rgba(255,150,60,' + a * 0.6 + ')'); g.addColorStop(1, 'rgba(255,80,30,0)'); octx.fillStyle = g; octx.beginPath(); octx.arc(p.x, p.y, rr, 0, 7); octx.fill(); }
       else if (f.t === 'quake') { octx.strokeStyle = 'rgba(240,96,76,' + Math.max(0, 1 - age / 4) + ')'; octx.lineWidth = 2; ring(f.y * W + f.x, (f.r || 3) * (1 + age * 0.2)); }
       else if (f.t === 'rain' || f.t === 'heat') { const rr = (f.r || 4) * radius * 0.05, a = Math.max(0, 1 - age / 8); const g = octx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr); const col = f.t === 'rain' ? '210,225,240' : '255,150,60'; g.addColorStop(0, 'rgba(' + col + ',' + 0.5 * a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); octx.fillStyle = g; octx.beginPath(); octx.arc(p.x, p.y, rr, 0, 7); octx.fill(); }
+      else if (f.t === 'launch' || f.t === 'ship') {
+        const base = vec(...tileLL(f.y * W + f.x)), hgt = Math.min(f.t === 'ship' ? 0.9 : 0.35, age * (f.t === 'ship' ? 0.15 : 0.06));
+        const top = project(base.map(v => v * (1 + hgt))), bot = project(base.map(v => v * (1 + Math.max(0, hgt - 0.08))));
+        if (top.z > -0.2) { octx.strokeStyle = 'rgba(255,190,110,' + Math.max(0, 1 - age / 7) + ')'; octx.lineWidth = 2; octx.beginPath(); octx.moveTo(bot.x, bot.y); octx.lineTo(top.x, top.y); octx.stroke(); octx.fillStyle = '#fff'; octx.beginPath(); octx.arc(top.x, top.y, 2.2, 0, 7); octx.fill(); }
+      }
       else if (f.t === 'smoke') { for (let k = 0; k < 4; k++) { const ph = ((t / 1000) * 0.6 + k / 4) % 1; octx.fillStyle = 'rgba(80,72,66,' + 0.45 * (1 - ph) + ')'; octx.beginPath(); octx.arc(p.x + Math.sin(k + t / 900) * 3, p.y - ph * 22, 3 + ph * 6, 0, 7); octx.fill(); } }
     }
     // aiming ring under the finger or cursor
@@ -1509,15 +1896,15 @@ void main(){
     let h = '<div class="p1">' + esc(ct ? ct.name + ', ' + TIERS[ct.tier].toLowerCase() + ' of the ' + (c ? c.name : 'lost') : c ? 'Lands of ' + nation(c) : BIOME[biome[i]].n) + '</div><button class="x" id="pinx" aria-label="Close">&times;</button>';
     if (ct) h += '<div class="p2">About ' + fmtPop(popOf(ct)) + ' people · founded ' + fullDate(ct.bornAt || S.created) + (ct.cap ? ' · capital' : '') + '</div>';
     else if (c) h += '<div class="p2">' + esc(Nation(c)) + ' · ' + AGES[ageOf(c.tech)] + ' · ' + fmtPop(c.pop) + ' people</div>';
-    h += '<div class="p2">' + BIOME[biome[i]].n + ' · ' + Math.round(temp[i] * 65 - 30) + '°C' + (s ? ' · home of <i>' + esc(s.name) + '</i>' : '') + '</div>' + (c ? '<div class="p2"><a href="#" data-pc="' + c.id + '" style="color:var(--gold)">See statistics for the ' + esc(c.name) + '</a></div>' : '');
+    h += '<div class="p2">' + BIOME[biome[i]].n + ' · ' + Math.round(temp[i] * 65 - 30) + '°C' + (s ? ' · home of <i>' + esc(s.name) + '</i>' : '') + '</div>' + (c ? '<div class="p2"><a href="#" data-pc="' + c.id + '" style="color:var(--gold)">See statistics for the ' + esc(c.name) + '</a></div>' : '') + (s ? '<div class="p2"><a href="#" data-ps="' + s.id + '" style="color:var(--gold)">What does <i>' + esc(s.name) + '</i> look like?</a></div>' : '');
     const pin = $('#pin'); pin.innerHTML = h; pin.hidden = false;
   }
-  $('#pin').addEventListener('click', e => { if (e.target.id === 'pinx') { $('#pin').hidden = true; } const m = e.target.closest('[data-pc]'); if (m) { e.preventDefault(); statSel = +m.dataset.pc; setView('stats'); } });
+  $('#pin').addEventListener('click', e => { if (e.target.id === 'pinx') { $('#pin').hidden = true; } const m = e.target.closest('[data-pc]'); if (m) { e.preventDefault(); spSel = 0; statSel = +m.dataset.pc; setView('stats'); } const q = e.target.closest('[data-ps]'); if (q) { e.preventDefault(); spSel = +q.dataset.ps; setView('stats'); } });
 
   // ---------- header, dock ----------
   function renderHeader() {
     $('#era').textContent = eraName(); $('#date').textContent = dateLabel();
-    $('#wname').textContent = S.name; $('#spirit').textContent = Math.floor(energyNow(Date.now()));
+    $('#wname').textContent = S.name + ' · ' + fmtAge(worldAge()).replace(' million years', 'M years').replace(' billion years', 'B years') + ' old'; $('#spirit').textContent = Math.floor(energyNow(Date.now()));
     const lv = $('#live'); lv.classList.toggle('ff', speed > 1); lv.lastChild.textContent = speed > 1 ? (speed === 60 ? 'Fast forward' : 'Very fast') : 'Live';
   }
   function setPower(k) {
@@ -1546,6 +1933,75 @@ void main(){
   });
   $('#modes').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; for (const x of $('#modes').children) x.setAttribute('aria-pressed', x === b); texDirty = true; });
 
+  // ---------- species profiles ----------
+  let spSel = 0;
+  function colorName(h) { h = ((h % 360) + 360) % 360; return h < 15 || h >= 345 ? 'red' : h < 40 ? 'orange' : h < 62 ? 'golden' : h < 85 ? 'olive' : h < 150 ? 'green' : h < 190 ? 'teal' : h < 250 ? 'blue' : h < 290 ? 'violet' : 'purple'; }
+  const LEN = ['', 'about 1 cm', 'about 5 cm', 'about 20 cm', 'about half a metre', 'about 1 metre', 'about 1.5 metres', 'about 2.5 metres', 'about 4 metres', 'about 6 metres', 'about 10 metres'];
+  const TALL = ['', 'about half a metre', 'about 70 cm', 'about 90 cm', 'about 1.1 metres', 'about 1.3 metres', 'about 1.5 metres', 'about 1.7 metres', 'about 2 metres', 'about 2.5 metres', 'about 3 metres'];
+  const isApe = s => s.hab === 2 && (s.iq >= 3.5 || s.awoke);
+  function describe(s) {
+    const r = mkRng(s.id * 7919 + 13), pk = a => a[Math.floor(r() * a.length)], col = colorName(s.hue), o = [];
+    if (s.cx < 1.2) o.push('A single ' + col + ' cell, far too small to see. It drifts in the water and multiplies by splitting in two.');
+    else if (s.cx < 2.5) o.push('A soft ' + col + ' colony of cells that floats like a tiny jelly. It has no eyes, no bones and no brain.');
+    else if (s.hab === 0) o.push(s.cx < 4 ? pk(['A ' + col + ' worm-like swimmer with a simple mouth and a ring of feelers.', 'A ' + col + ' shelled creature that crawls along the sea floor on many thin legs.']) : pk(['A ' + col + ' fish-like swimmer with fins, gills and a strong tail.', 'A streamlined ' + col + ' swimmer with large eyes and a body built for speed.', 'A ' + col + ' sea creature with flippers and a long, flexible neck.']));
+    else if (s.hab === 1) o.push(pk(['A ' + col + ' amphibian with four stubby legs and moist skin. It breathes air but stays close to water.', 'A ' + col + ' shore crawler with webbed feet. It hunts and rests in the tidal flats.']));
+    else if (s.iq >= 5.8 || s.awoke) o.push('An upright ' + col + '-furred ape that walks on two legs. It has clever hands, a large head and a voice it uses to talk.');
+    else if (s.iq >= 3.5) o.push(pk(['A ' + col + ' ape-like climber with grasping hands and curious eyes. It lives in family groups.', 'A ' + col + ' tree dweller with long arms and a thoughtful face. Troops call to each other through the forest.']));
+    else if (s.cx < 5) o.push(pk(['A ' + col + ' lizard-like crawler with scaly skin and a long tail.', 'A ' + col + ' insect-like creature with a hard shell and six legs.']));
+    else if (s.diet) o.push(pk(['A ' + col + ' four-legged predator with claws and a powerful jaw.', 'A sleek ' + col + ' hunter with sharp eyes and fast legs.', 'A ' + col + ' pack hunter with a thick mane and long teeth.']));
+    else o.push(pk(['A ' + col + ' grazer with flat teeth and a sturdy body.', 'A long-necked ' + col + ' browser that eats leaves from high branches.', 'A ' + col + ' plant eater with a shell-like back and short legs.']));
+    if (isApe(s)) o.push('Adults stand ' + TALL[s.size] + ' tall' + (s.size >= 9 ? ', true giants' : '') + '.');
+    else if (s.cx >= 1.2) o.push('Adults are ' + LEN[s.size] + ' long.');
+    o.push(s.diet ? (s.cx < 2.5 ? 'It feeds on other tiny life.' : 'It hunts smaller creatures.') : (s.hab === 0 ? 'It feeds on algae and sunlight.' : 'It eats plants.'));
+    if (s.heat < 0.3) o.push(s.cx < 2.5 ? 'It survives in icy water.' : 'Thick fur or blubber keeps it warm in the cold.');
+    else if (s.heat > 0.72) o.push('It loves heat and does best in the tropics.');
+    if (s.cx >= 2.5) o.push(s.iq < 1 ? 'It acts on instinct alone.' : s.iq < 3.5 ? 'It is not very clever, but learns simple tricks.' : s.iq < 5.8 ? 'It is clever and curious, and some have started using tools.' : 'It is intelligent enough to speak, plan and build.');
+    return o.join(' ');
+  }
+  // what changed between an ancestor and its descendant, in plain words
+  const traitsOfEntry = e => e ? { hab: e[5], iq: e[7], cx: e[8], size: e[10], diet: e[11], heat: e[12] } : null;
+  const traitsOfSp = s => ({ hab: s.hab, iq: s.iq, cx: s.cx, size: s.size, diet: s.diet, heat: s.heat });
+  function changes(a, b) {
+    if (!a || !b) return '';
+    const o = [];
+    if (a.hab !== b.hab) o.push(b.hab > a.hab ? (b.hab === 1 ? 'left the open sea for the shore' : 'moved onto dry land') : (b.hab === 0 ? 'went back to living in the sea' : 'returned to the water\u2019s edge'));
+    if (a.size != null && b.size != null && a.size !== b.size) o.push(b.size > a.size ? 'grew larger' : 'became smaller');
+    if (a.diet != null && b.diet != null && a.diet !== b.diet) o.push(b.diet ? 'became a hunter' : 'switched to eating plants');
+    if (b.cx - a.cx >= 0.6) o.push('developed a more complex body'); else if (a.cx - b.cx >= 0.6) o.push('became simpler');
+    if (b.iq - a.iq >= 0.6) o.push('grew cleverer'); else if (a.iq - b.iq >= 0.8) o.push('lost some cleverness');
+    if (a.heat != null && b.heat != null && Math.abs(b.heat - a.heat) >= 0.1) o.push(b.heat > a.heat ? 'adapted to warmer places' : 'adapted to colder places');
+    if (!o.length) return 'Small changes in colour and habits';
+    const t = o.join(', '); return cap1(t.replace(/, ([^,]*)$/, ' and $1'));
+  }
+  function speciesHTML(s) {
+    const counts = {}; let first = -1; for (let i = 0; i < N; i++) if (sp[i] === s.id) { counts[biome[i]] = (counts[biome[i]] || 0) + 1; if (first < 0) first = i; }
+    const homes = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([b]) => BIOME[b].n.toLowerCase());
+    const peoples = Object.values(S.cultures).filter(c => c.sp === s.id);
+    const ppl = peoples.reduce((a, c) => a + c.pop, 0), unit = s.cx < 2.5 ? ' cells' : '';
+    let h = '<div class="vhead"><button class="back" id="sback">&larr; Back</button></div>';
+    h += '<div style="display:flex;gap:10px;align-items:center"><span class="sw" style="width:16px;height:16px;margin:0;background:' + css(spRGB(s)) + '"></span><h2 style="margin:0;font:800 20px/1.2 var(--f-display)"><i>' + esc(s.name) + '</i></h2></div>';
+    h += '<p style="margin:12px 0;font-size:14.5px;line-height:1.6">' + esc(describe(s)) + '</p>';
+    if (first >= 0) h += '<div class="rowbtns" style="margin-bottom:12px"><button class="ghost" data-spgo="' + s.id + '">Show on globe</button></div>';
+    if (s.dom && s.domBy) h += '<p style="margin:0 0 10px;color:var(--gold);font-size:13.5px">Tamed by the ' + esc(s.domBy) + ', who keep them as ' + esc(s.domWhat) + '.</p>';
+    else if (s.hunted && S.tick - (s.huntedT || 0) < 3000) h += '<p style="margin:0 0 10px;color:var(--k-death);font-size:13.5px">Being hunted and pushed out of its land by the ' + esc(s.hunted) + '.</p>';
+    h += '<dl class="kv"><dt>Population</dt><dd>About ' + fmtPop(speciesPop(s)) + unit + ' in the wild' + (ppl ? ', plus ' + fmtPop(ppl) + ' living in ' + peoples.length + (peoples.length > 1 ? ' nations' : ' nation') : '') + '</dd>' +
+      '<dt>Lives in</dt><dd>' + HAB[s.hab] + (homes.length ? ', mostly ' + homes.join(' and ') : '') + '</dd><dt>Range</dt><dd>' + (s.tiles / N * 100).toFixed(1) + '% of the world</dd>' +
+      '<dt>Likes</dt><dd>About ' + Math.round(s.heat * 65 - 30) + ' °C</dd><dt>Diet</dt><dd>' + (s.diet ? 'Hunter' : 'Plant eater') + '</dd><dt>Size</dt><dd>' + (s.cx < 1.2 ? 'Microscopic' : SIZE[s.size] + ', ' + (isApe(s) ? TALL[s.size] + ' tall' : LEN[s.size])) + '</dd>' +
+      '<dt>First seen</dt><dd>' + (s.bornAt ? fullDate(s.bornAt) : 'Before records began') + '</dd>' + (s.parentName ? '<dt>Evolved from</dt><dd><i>' + esc(s.parentName) + '</i></dd>' : '') + '<dt>Generation</dt><dd>' + s.gen + ' of its line</dd>' +
+      (peoples.length ? '<dt>Became</dt><dd>' + peoples.map(c => esc(Nation(c))).join(', ') + '</dd>' : '') + '</dl>';
+    const T = S.tree || {}, chain = []; let u = T[s.uid] ? T[s.uid][1] : s.anc;
+    while (u && T[u] && chain.length < 40) { chain.push({ name: T[u][0], at: T[u][2], died: T[u][3], t: traitsOfEntry(T[u]), hue: T[u][4] }); u = T[u][1]; }
+    chain.reverse(); const steps = chain.slice(-9); steps.push({ name: s.name, at: s.bornAt, t: traitsOfSp(s), hue: s.hue, me: 1 });
+    if (steps.length > 1) {
+      h += '<div class="sec">How it evolved' + (chain.length > 9 ? ' · last ' + (steps.length - 1) + ' of ' + chain.length + ' steps' : '') + '</div><div class="lineage">';
+      steps.forEach((st, i) => { h += '<div class="lstep"><span class="dot" style="background:' + css(hsl(st.hue, st.me ? 0.6 : 0.3, st.me ? 0.55 : 0.45)) + '"></span><div><i>' + esc(st.name) + '</i>' + (st.me ? ' <b style="font-size:11px;color:var(--gold)">today</b>' : '') + '<span class="tm2">' + (st.at ? fullDate(st.at) : 'before records') + (st.died ? ' · extinct' : '') + '</span>' + (i ? '<span class="chg">' + esc(changes(steps[i - 1].t, st.t)) + '</span>' : '') + '</div></div>'; });
+      h += '</div>';
+    } else if (s.parentName) h += '<p class="small" style="margin-top:12px">It evolved from <i>' + esc(s.parentName) + '</i> before records of ancestry began.</p>';
+    h += '<div class="bars" style="margin-top:12px"><span>body</span><div class="bar"><i style="width:' + s.cx * 10 + '%;background:var(--k-life)"></i></div><span>mind</span><div class="bar mark"><i style="width:' + s.iq * 10 + '%;background:var(--gold)"></i></div></div>';
+    h += '<p class="small" style="margin-top:6px">Body is how complex it is, mind is how clever. The gold line is where a land creature can become a people.</p>';
+    return h;
+  }
+
   // ---------- views: world, history, statistics, help ----------
   let view = 'globe', ptab = 'hist', statSel = 0, chartHover = false;
   const mobile = () => window.innerWidth <= 1020;
@@ -1565,7 +2021,13 @@ void main(){
   $('#pbody').addEventListener('click', e => {
     const f = e.target.closest('[data-f]'); if (f) { hfilter = f.dataset.f; renderPanel(true); return; }
     const cs = e.target.closest('[data-cs]'); if (cs) { statSel = +cs.dataset.cs; renderPanel(true); $('#pbody').scrollTop = 0; if (mobile()) window.scrollTo(0, 0); return; }
-    if (e.target.closest('#sback')) { statSel = 0; renderPanel(true); return; }
+    if (e.target.closest('#sback')) { if (spSel) spSel = 0; else statSel = 0; renderPanel(true); return; }
+    if (e.target.closest('#treebtn')) { treeOpen = true; spSel = 0; renderPanel(true); $('#pbody').scrollTop = 0; if (mobile()) window.scrollTo(0, 0); return; }
+    if (e.target.closest('#treeback')) { treeOpen = false; renderPanel(true); return; }
+    if (e.target.closest('#treeall')) { treeAll = !treeAll; renderPanel(true); return; }
+    const spg = e.target.closest('[data-spgo]'); if (spg) { const id = +spg.dataset.spgo; hl = { t: 's', id, until: performance.now() + 4000 }; texDirty = true; for (let i = 0; i < N; i++) if (sp[i] === id) { showOnGlobe(i, Math.max(zoom, 1.6)); break; } return; }
+    const spr = e.target.closest('[data-sp]'); if (spr) { spSel = +spr.dataset.sp; renderPanel(true); $('#pbody').scrollTop = 0; if (mobile()) window.scrollTo(0, 0); return; }
+    const fv = e.target.closest('[data-fav]'); if (fv) { const id = +fv.dataset.fav; S.fav = S.fav === id ? 0 : id; toast(S.fav ? 'You now follow ' + nation(S.cultures[id]) + '. Its news is marked in gold.' : 'You stopped following this nation.'); save(); renderPanel(true); return; }
     const g = e.target.closest('[data-go]'); if (g) { const c = S.cultures[g.dataset.go]; const cap = c && capitalOf(c); if (cap) { hl = { t: 'c', id: c.id, until: performance.now() + 4000 }; texDirty = true; showOnGlobe(cap.i, 2.4); } return; }
     const b = e.target.closest('[data-hl]'); if (!b) return;
     const [t, id] = b.dataset.hl.split(':'); hl = { t, id: +id, until: performance.now() + 4000 }; texDirty = true;
@@ -1637,26 +2099,27 @@ void main(){
     const body = $('#pbody'); let h = '';
     if (mobile() && view === 'globe') return;
     if (ptab === 'hist') h = histHTML();
-    else if (ptab === 'stats') h = statSel && S.cultures[statSel] ? nationHTML(S.cultures[statSel]) : statsHTML();
+    else if (ptab === 'stats') h = spSel && S.species[spSel] ? speciesHTML(S.species[spSel]) : treeOpen ? treeHTML() : statSel && S.cultures[statSel] ? nationHTML(S.cultures[statSel]) : statsHTML();
     else h = helpHTML();
     if (force || h !== lastBody) { const st = body.scrollTop; body.innerHTML = h; lastBody = h; if (!force) body.scrollTop = st; }
   }
   function histHTML() {
     let h = '<div class="sec">Ages of your world</div><div class="ages">';
-    h += '<div class="age"><b>World created</b><span>' + fullDate(S.created) + '</span></div>';
+    h += '<div class="age"><b>World created</b><span>' + fullDate(S.created) + ' · now ' + fmtAge(worldAge()) + ' old</span></div>';
     if (S.firsts.land) h += '<div class="age"><b>Life on land</b><span>' + esc(firstLog('Life conquered') || '') + '</span></div>';
     for (const a of S.ages) h += '<div class="age"><b>' + AGES[a.a] + '</b><span>' + fullDate(a.at) + ' · Year ' + (a.y + 1).toLocaleString('en-US') + ' · led by the ' + esc(a.by) + '</span></div>';
     const nd = S.civStart != null ? nextDiscovery() : null;
     if (nd) { const notes = paceNotes(nd.lead); h += '<div class="age next"><b>Next: ' + esc(nd.tech) + '</b><span>The ' + esc(nd.lead.name) + ' should discover it in ' + fmtIn(nd.left) + (nd.nextAge && nd.ageLeft ? '. ' + nd.nextAge + ' in ' + fmtIn(nd.ageLeft) : '') + '. Wars, plagues and golden ages change this.</span>' + (notes.length ? '<div class="chips">' + moodChips(nd.lead) + '</div>' : '') + '</div>'; }
     else if (S.civStart == null) h += '<div class="age next"><b>Next: the first people</b><span>' + (S.firsts.tools ? 'Clever apes already use stones as tools. A mind could wake any time now.' : 'Waiting for a land creature to grow clever enough.') + '</span></div>';
     h += '</div><div class="filters">' + FILTERS.map(([k, l]) => '<button class="flt" data-f="' + k + '" aria-pressed="' + (hfilter === k) + '">' + l + '</button>').join('') + '</div>';
-    const kinds = FMAP[hfilter], items = S.log.filter(l => !kinds || kinds.includes(l.k)).slice(-220).reverse();
+    const favC = S.fav && S.cultures[S.fav], kinds = FMAP[hfilter], items = S.log.filter(l => hfilter === 'fav' ? favC && l.x.includes(favC.name) : !kinds || kinds.includes(l.k)).slice(-220).reverse();
+    if (hfilter === 'fav' && !favC) h += '<p class="empty">You are not following a nation yet. Open Statistics, tap a nation and choose Follow.</p>';
     if (!items.length) h += '<p class="empty">' + (hfilter === 'you' ? 'You have not used any powers yet. Everything you do will be listed here with the time you did it.' : 'Nothing of this kind has happened yet.') + '</p>';
     let day = ''; h += '<ul class="log">';
     for (const l of items) {
       const dl = dayLabel(l.at); if (dl !== day) { day = dl; h += '</ul><div class="dayhead">' + dl + '</div><ul class="log">'; }
       const col = KIND[l.k] || '#888';
-      h += '<li class="' + (l.k === 'big' ? 'big ' : '') + (l.k === 'you' ? 'you ' : '') + (Date.now() - l.at < 4000 ? 'fresh' : '') + '"><span class="tm">' + tm(l.at) + '</span><div><div class="when"><span class="kd" style="color:' + col + ';background:' + col + '22">' + KLABEL[l.k] + '</span>' + esc(l.d) + '</div><div class="what">' + esc(l.x) + '</div></div></li>';
+      h += '<li class="' + (favC && l.x.includes(favC.name) ? 'favl ' : '') + (l.k === 'big' ? 'big ' : '') + (l.k === 'you' ? 'you ' : '') + (Date.now() - l.at < 4000 ? 'fresh' : '') + '"><span class="tm">' + tm(l.at) + '</span><div><div class="when"><span class="kd" style="color:' + col + ';background:' + col + '22">' + KLABEL[l.k] + '</span>' + esc(l.d) + '</div><div class="what">' + esc(l.x) + '</div></div></li>';
     }
     return h + '</ul>';
   }
@@ -1668,20 +2131,94 @@ void main(){
     const days = Math.max(1, Math.floor((Date.now() - S.created) / 86400e3) + 1);
     let h = '<div class="census"><div class="stat"><b>' + shortPop(tot) + '</b><span>people</span></div><div class="stat"><b>' + cs.length + '</b><span>nations</span></div><div class="stat"><b>' + S.cities.length + '</b><span>settlements</span></div>' +
       '<div class="stat"><b>' + (S.spCount || 0) + '</b><span>species alive</span></div><div class="stat"><b>' + (S.stats.wars || 0) + '</b><span>wars fought</span></div><div class="stat"><b>' + S.wonders.length + '</b><span>wonders</span></div></div>';
+    h += '<div class="census" style="grid-template-columns:1fr 1fr"><div class="stat"><b>' + fmtAge(worldAge()).replace(' million years', 'M').replace(' billion years', 'B').replace(' years', '') + '</b><span>years since the planet formed</span></div><div class="stat"><b>' + (S.civStart != null ? Math.floor(S.civYear + 1).toLocaleString('en-US') : '0') + '</b><span>years since the first people</span></div></div>';
     h += '<p class="small" style="margin:0 0 4px">Day ' + days + ' of ' + esc(S.name) + ' · ' + esc(dateLabel()) + ' · ' + esc(eraName()) + '</p>';
     if (S.civStart != null) {
       h += chart('wpop', 'World population', 'All peoples together, on a scale where each line is ten times the one below', Z.t, [{ n: 'World', c: '#e9b54d', v: Z.pop.map(decP) }], { log: true });
       const top = cs.slice(0, 6);
       h += chart('npop', 'Population by nation', 'The six largest nations today', Z.t, top.map(c => ({ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: (Z.c[c.id] || []).map(v => v ? decP(v) : null) })), { log: true });
-      h += '<div class="sec">Nations · tap for details</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Nation</th><th class="n">People</th><th class="n">Towns</th><th class="n">Land</th></tr></thead><tbody>' +
-        cs.map(c => '<tr data-cs="' + c.id + '"><td><span class="sw" style="display:inline-block;margin:0 7px -1px 0;background:' + css(culRGB(c)) + '"></span><b>' + esc(Nation(c)) + '</b><div class="meta">' + AGES[ageOf(c.tech)] + '</div>' + (paceNotes(c).length ? '<div class="chips">' + moodChips(c) + '</div>' : '') + '</td><td class="n">' + shortPop(c.pop) + '</td><td class="n">' + (c.cities || 0) + '</td><td class="n">' + (c.tiles / N * 100).toFixed(1) + '%</td></tr>').join('') + '</tbody></table></div>';
+      h += '<div class="sec">Nations · tap for details</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Nation</th><th class="n">Power</th><th class="n">People</th><th class="n">Land</th></tr></thead><tbody>' +
+        cs.slice().sort((a, b) => ((b.pw && b.pw.all) || 0) - ((a.pw && a.pw.all) || 0)).map(c => '<tr data-cs="' + c.id + '"><td><span class="sw" style="display:inline-block;margin:0 7px -1px 0;background:' + css(culRGB(c)) + '"></span><b>' + esc(Nation(c)) + '</b><div class="meta">' + (GOVS[c.gov] || GOVS.Tribe).n + ' · ' + AGES[ageOf(c.tech)] + '</div>' + (paceNotes(c).length ? '<div class="chips">' + moodChips(c) + '</div>' : '') + '</td><td class="n"><b>' + ((c.pw && c.pw.all) || '-') + '</b></td><td class="n">' + shortPop(c.pop) + '</td><td class="n">' + (c.tiles / N * 100).toFixed(1) + '%</td></tr>').join('') + '</tbody></table></div>';
+      h += '<div class="sec">Strengths · 100 is the best in the world</div><div class="tblwrap"><table class="tbl"><thead><tr><th>Nation</th>' + PW.map(([k, n]) => '<th class="n">' + n.slice(0, 3) + '</th>').join('') + '</tr></thead><tbody>' +
+        cs.filter(c => c.pw).sort((a, b) => b.pw.all - a.pw.all).map(c => '<tr data-cs="' + c.id + '"><td><b>' + esc(c.name) + '</b></td>' + PW.map(([k]) => '<td class="n"' + (c.pw[k] === 100 ? ' style="color:var(--gold);font-weight:600"' : '') + '>' + c.pw[k] + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+      const ptop = cs.filter(c => c.pw).sort((a, b) => b.pw.all - a.pw.all).slice(0, 6);
+      h += chart('npow', 'Power over time', 'Overall strength of today\u2019s six strongest nations', Z.t, ptop.map(c => ({ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: ((Z.p || {})[c.id] || []).map(v => v || null) })), { fmt: v => Math.round(v) + '', h: 160 });
       const ts = tiers.reduce((a, b) => a + b, 0) || 1;
       h += '<div class="sec">Settlements by size</div><div class="tierbar">' + tiers.map((n, k) => n ? '<i style="flex:' + n + ';background:' + TIERCOL[k] + '"></i>' : '').join('') + '</div><div class="tierlg">' + tiers.map((n, k) => '<span><i style="background:' + TIERCOL[k] + '"></i>' + tierWord(n, k) + '</span>').join('') + '</div>';
       h += chart('nset', 'Settlements over time', '', Z.t, [{ n: 'Settlements', c: '#dac28c', v: Z.set }], { fmt: v => Math.round(v) + '' , h: 140 });
     } else h += '<p class="empty" style="margin-top:10px">No people yet, so there is no population to count. These charts fill in once the first tribe lights a fire. For now, here is how life is doing.</p>';
     h += chart('sp', 'Species alive', 'How many kinds of creature live in the world', Z.t, [{ n: 'Species', c: '#72d4a6', v: Z.sp }], { fmt: v => Math.round(v) + '', h: 140 });
+    if (Z.sea && Z.sea.some(Boolean)) {
+      h += chart('hab', 'Where life lives', 'Number of species in the sea, on the shore and on land', Z.t, [{ n: 'Sea', c: '#5fa8d8', v: Z.sea.map(v => v || null) }, { n: 'Shore', c: '#5fc2c6', v: Z.shore.map(v => v || null) }, { n: 'Land', c: '#9bc46a', v: Z.land.map(v => v || null) }], { fmt: v => Math.round(v) + '', h: 150 });
+      h += chart('mind', 'Cleverest creature', 'The highest mind of any species. People can appear at 5.8', Z.t, [{ n: 'Mind', c: '#e9b54d', v: Z.mind.map(v => v / 10) }], { fmt: v => (Math.round(v * 10) / 10) + '', h: 130 });
+    }
+    const fl = Object.values(S.faiths || {}).filter(f => !f.ended).map(f => { const cs = Object.values(S.cultures).filter(c => c.fid === f.id); return { f, cs, pop: cs.reduce((a, c) => a + c.pop, 0) }; }).sort((a, b) => b.pop - a.pop);
+    if (S.civStart != null) {
+      h += '<div class="sec">Faiths</div>';
+      if (!fl.length) h += '<p class="empty">No organised faith yet. Peoples still pray to spirits of the land. A faith is usually founded around the time of farming, or you can send a prophet.</p>';
+      else h += fl.map(({ f, cs, pop }) => '<div class="row" style="cursor:default"><span class="sw" style="background:' + css(hsl(f.hue, 0.75, 0.6)) + '"></span><div><div class="nm">The ' + esc(f.name) + '</div><div class="meta">Founded by ' + esc(f.prophet) + ' of the ' + esc(f.founder) + ', ' + fullDate(f.bornAt) + '. Teaches ' + esc(f.tenet) + '.<br>Followed by ' + cs.map(c => esc(c.name)).join(', ') + '</div></div><span class="num">' + shortPop(pop) + '</span></div>').join('');
+      const gone = Object.values(S.faiths || {}).filter(f => f.ended).length; if (gone) h += '<p class="small">' + gone + (gone > 1 ? ' older faiths have' : ' older faith has') + ' died out.</p>';
+    }
+    if (S.civStart != null) {
+      const al = (S.alliances || []).filter(x => S.cultures[x.a] && S.cultures[x.b]);
+      h += '<div class="sec">Alliances</div>' + (al.length ? '<ul class="plain">' + al.map(x => '<li><b>' + esc(S.cultures[x.a].name) + ' and ' + esc(S.cultures[x.b].name) + '</b><span>Allies since Year ' + x.y.toLocaleString('en-US') + ' · ' + fullDate(x.at) + '</span></li>').join('') + '</ul>' : '<p class="empty">No alliances yet. Peaceful neighbours, especially ones who share a faith or free trade, sign them over time.</p>') + '<p class="small">On the globe, dashed gold lines are trade routes and solid green lines are alliances.</p>';
+      h += '<div class="sec">Languages</div>' + langTree();
+      const dom = (S.dom || []).slice().reverse();
+      h += '<div class="sec">People and nature</div><p class="small" style="margin:0 0 6px">As peoples spread, they hunt wild animals and take over their land. ' + (S.stats.humanExt || 0) + ' species have been driven extinct by people so far.</p>';
+      if (dom.length) h += '<ul class="plain">' + dom.map(d => '<li><b>' + esc(cap1(d.what)) + '</b><span>The ' + esc(d.by) + ' tamed <i>' + esc(d.name) + '</i> · Year ' + d.y.toLocaleString('en-US') + '</span></li>').join('') + '</ul>';
+    }
+    h += '<div class="sec">Life</div><button class="ghost" id="treebtn" style="margin-bottom:6px">Open the tree of life</button>';
     const life = Object.values(S.species).sort((a, b) => b.tiles - a.tiles).slice(0, 8);
-    h += '<div class="sec">Most widespread creatures · tap to find</div>' + life.map(s => '<button class="row" data-hl="s:' + s.id + '"><span class="sw" style="background:' + css(spRGB(s)) + '"></span><div><div class="nm"><i>' + esc(s.name) + '</i></div><div class="meta">' + HAB[s.hab] + ' · ' + SIZE[s.size] + ' · ' + (s.diet ? 'Hunter' : 'Plant eater') + (s.awoke ? ' · <span style="color:var(--gold)">became a people</span>' : '') + '</div></div><span class="num">' + (s.tiles / N * 100).toFixed(1) + '%</span></button>').join('');
+    h += '<div class="sec">Most widespread creatures · tap for their profile</div>' + life.map(s => '<button class="row" data-sp="' + s.id + '"><span class="sw" style="background:' + css(spRGB(s)) + '"></span><div><div class="nm"><i>' + esc(s.name) + '</i></div><div class="meta">' + HAB[s.hab] + ' · ' + SIZE[s.size] + ' · ' + (s.diet ? 'Hunter' : 'Plant eater') + (s.awoke ? ' · <span style="color:var(--gold)">became a people</span>' : '') + '</div><div class="meta">About ' + shortPop(speciesPop(s)) + (s.cx < 2.5 ? ' cells' : '') + '</div></div><span class="num">' + (s.tiles / N * 100).toFixed(1) + '%</span></button>').join('');
+    return h;
+  }
+  const PWCOL = { mil: '#e27d6c', sci: '#b7a0f2', eco: '#e9b54d', dip: '#82b5ea', cul: '#8fd0e8', fai: '#f2a65a' };
+  const powerRank = c => Object.values(S.cultures).filter(x => x.pw).sort((a, b) => b.pw.all - a.pw.all).indexOf(c) + 1;
+  function powerBars(c) {
+    if (!c.pw) return '<p class="small">Power ratings appear in a moment.</p>';
+    return '<div class="pwbars">' + PW.map(([k, n]) => '<span>' + n + '</span><div class="bar"><i style="width:' + c.pw[k] + '%;background:' + PWCOL[k] + '"></i></div><b>' + c.pw[k] + '</b>').join('') + '</div>';
+  }
+  let treeOpen = false, treeAll = false;
+  function langTree() {
+    const L = S.langs || {}, all = Object.values(L); if (!all.length) return '<p class="empty">No languages yet.</p>';
+    const speakers = id => Object.values(S.cultures).filter(c => c.lang === id);
+    const kids = {}; for (const l of all) (kids[l.parent || 0] = kids[l.parent || 0] || []).push(l);
+    const alive = id => speakers(id).length || (kids[id] || []).some(k => alive(k.id));
+    const node = l => { if (!alive(l.id)) return ''; const sp_ = speakers(l.id), pop = sp_.reduce((a, c) => a + c.pop, 0); return '<div class="tbr"><div class="tn' + (sp_.length ? '' : ' dead') + '"><span class="dot" style="background:' + (sp_.length ? '#8fd0e8' : '#4a5a5c') + '"></span><div><b style="font-weight:600">' + esc(l.name) + '</b><span class="tm2">' + (sp_.length ? 'Spoken by the ' + sp_.map(c => esc(c.name)).join(', the ') + ' · ' + shortPop(pop) + ' speakers' : 'No longer spoken') + ' · born Year ' + l.y.toLocaleString('en-US') + '</span></div></div>' + ((kids[l.id] || []).length ? '<div class="tb">' + kids[l.id].map(node).join('') + '</div>' : '') + '</div>'; };
+    return '<div class="tree">' + (kids[0] || []).map(node).join('') + '</div><p class="small">Each language family grows from the first speech of one band. Languages split when peoples live apart for a long time.</p>';
+  }
+  function treeHTML() {
+    const T = S.tree || {}, focus = new Set();
+    const live = Object.values(S.species).sort((a, b) => b.tiles - a.tiles);
+    for (const s of live.slice(0, treeAll ? 45 : 10)) focus.add(s); for (const s of live) if (s.awoke) focus.add(s);
+    // node keys: tree uids, plus living species not yet recorded (key 'L'+id)
+    const nodes = {}, kids = {};
+    const addChain = s => {
+      let key = T[s.uid] ? String(s.uid) : 'L' + s.id, up = T[s.uid] ? T[s.uid][1] : s.anc;
+      if (!nodes[key]) nodes[key] = { key, name: s.name, hue: s.hue, hab: s.hab, alive: true, tiles: s.tiles, bornAt: s.bornAt, sp: s.id, awoke: s.awoke, pn: s.anc || s.parentName === s.name ? '' : s.parentName, t: traitsOfSp(s) };
+      let child = key;
+      while (up && T[up]) {
+        const k = String(up), e = T[up];
+        if (!nodes[k]) { const ls = Object.values(S.species).find(x => x.uid === up); nodes[k] = { key: k, name: e[0], hue: e[4], hab: e[5], alive: !e[3], died: e[3], bornAt: e[2], sp: ls ? ls.id : 0, tiles: ls ? ls.tiles : 0, pn: e[9], t: traitsOfEntry(e) }; }
+        (kids[k] = kids[k] || new Set()).add(child);
+        child = k; up = e[1];
+      }
+      nodes[child].root = true;
+    };
+    for (const s of focus) addChain(s);
+    const roots = Object.values(nodes).filter(n => n.root && !Object.values(kids).some(set => set.has(n.key)));
+    const line = (n, par) => '<div class="tn' + (n.alive ? '' : ' dead') + '"><span class="dot" style="background:' + css(n.alive ? hsl(n.hue, 0.6, 0.55) : hsl(n.hue, 0.15, 0.4)) + '"></span><div>' + (n.sp && n.alive ? '<button class="tlink" data-sp="' + n.sp + '"><i>' + esc(n.name) + '</i></button>' : '<i>' + esc(n.name) + '</i>') +
+      '<span class="tm2">' + HAB[n.hab] + (n.bornAt ? ' · from ' + fullDate(n.bornAt) : '') + (n.alive ? (n.tiles ? ' · ' + (n.tiles / N * 100).toFixed(1) + '% of the world' : ' · alive') : ' · extinct' + (n.died ? ' ' + fullDate(n.died) : '')) + (n.awoke ? ' · became a people' : '') + '</span>' + (n.pn ? '<span class="tm2">Evolved from ' + esc(n.pn) + ', before records began</span>' : '') + (par ? '<span class="chg">' + esc(changes(par.t, n.t)) + '</span>' : '') + '</div></div>';
+    const draw = (key, depth, par) => {
+      let h = '', k = key, p = par;
+      for (;;) { h += line(nodes[k], p); const ch = kids[k] ? [...kids[k]] : []; if (ch.length !== 1) { const me = nodes[k]; if (ch.length) h += '<div class="tb">' + ch.sort((a, b) => (nodes[b].tiles || 0) - (nodes[a].tiles || 0)).map(c => '<div class="tbr">' + draw(c, depth + 1, me) + '</div>').join('') + '</div>'; break; } p = nodes[k]; k = ch[0]; }
+      return h;
+    };
+    let h = '<div class="vhead"><button class="back" id="treeback">&larr; Back</button></div><h2 style="margin:0 0 6px;font:800 20px/1.2 var(--f-display)">Tree of life</h2>';
+    h += '<p class="small" style="margin:0 0 12px">How today\u2019s most widespread creatures descend from the first cell. Each step down is a newer species. Grey ones are extinct. Tap a living species for its profile.</p>';
+    if (S.treeAt && roots.length > 1) h += '<p class="small" style="margin:-4px 0 12px">Records of ancestry began on ' + fullDate(S.treeAt) + ', so older branches start there. New species from now on are linked all the way back.</p>';
+    h += '<div class="rowbtns" style="margin-bottom:12px"><button class="ghost" id="treeall">' + (treeAll ? 'Show only the top 10' : 'Show more species (top 45)') + '</button></div>';
+    h += '<div class="tree">' + roots.map(r => draw(r.key, 0)).join('') + '</div>';
     return h;
   }
   function nationHTML(c) {
@@ -1690,24 +2227,48 @@ void main(){
     let h = '<div class="vhead"><button class="back" id="sback">&larr; All nations</button></div>';
     h += '<div style="display:flex;gap:10px;align-items:center"><span class="sw" style="width:16px;height:16px;margin:0;background:' + css(culRGB(c)) + '"></span><h2 style="margin:0;font:800 20px/1.2 var(--f-display)">' + esc(Nation(c)) + '</h2></div>';
     if (paceNotes(c).length) h += '<div class="chips" style="margin-top:8px">' + moodChips(c) + '</div>';
-    h += '<div class="rowbtns" style="margin:12px 0"><button class="ghost" data-go="' + c.id + '">Show on globe</button></div>';
-    h += '<dl class="kv"><dt>Population</dt><dd>' + fmtPop(c.pop) + (c.peak > c.pop * 1.05 ? ' (peak ' + fmtPop(c.peak) + ')' : '') + '</dd><dt>Founded</dt><dd>' + fullDate(c.bornAt || S.created) + '</dd><dt>Government</dt><dd>' + esc(c.gov || 'Tribe') + '</dd><dt>Age</dt><dd>' + AGES[ageOf(c.tech)] + '</dd>' +
+    h += '<div class="rowbtns" style="margin:12px 0"><button class="ghost" data-go="' + c.id + '">Show on globe</button><button class="' + (S.fav === c.id ? 'btn' : 'ghost') + '" data-fav="' + c.id + '">' + (S.fav === c.id ? '\u2605 Following' : '\u2606 Follow this nation') + '</button></div>';
+    const G = GOVS[c.gov] || GOVS.Tribe;
+    h += '<div class="govcard"><span class="k">Government</span><b>' + G.n + '</b><span>' + esc(G.d) + '</span></div>';
+    if ((c.civics || []).length) h += '<div class="sec">Civics · chosen by the people</div><div class="civics">' + c.civics.map(k => '<div><b>' + CIVICS[k].n + '</b><span>' + esc(CIVICS[k].d) + '</span></div>').join('') + '</div>';
+    if (c.pw) h += '<div class="sec">Power · #' + powerRank(c) + ' of ' + Object.keys(S.cultures).length + ' nations · overall ' + c.pw.all + '</div>' + powerBars(c);
+    h += '<div class="sec">Facts</div><dl class="kv"><dt>Population</dt><dd>' + fmtPop(c.pop) + (c.peak > c.pop * 1.05 ? ' (peak ' + fmtPop(c.peak) + ')' : '') + '</dd><dt>Founded</dt><dd>' + fullDate(c.bornAt || S.created) + '</dd><dt>Age</dt><dd>' + AGES[ageOf(c.tech)] + '</dd>' +
       '<dt>Capital</dt><dd>' + (cap ? esc(cap.name) + ' · ' + TIERS[cap.tier].toLowerCase() : '-') + '</dd><dt>Settlements</dt><dd>' + (c.cities || 0) + (tiers.some(Boolean) ? ' (' + tiers.map((n, k) => n ? tierWord(n, k) : '').filter(Boolean).join(', ') + ')' : '') + '</dd>' +
-      '<dt>Land</dt><dd>' + (c.tiles / N * 100).toFixed(1) + '% of the world</dd><dt>Faith</dt><dd>' + esc(c.faithName) + (c.faith > 0.6 ? ', devout' : '') + '</dd><dt>Discoveries</dt><dd>' + c.tech + ' of ' + TECHS.length + (nx ? ', next ' + nx.toLowerCase() : '') + '</dd>' +
+      '<dt>Ruler</dt><dd>' + (c.ruler ? esc(rulerName(c, c.ruler)) + ', since Year ' + c.ruler.from.toLocaleString('en-US') : '-') + '</dd>' +
+      '<dt>Land</dt><dd>' + (c.tiles / N * 100).toFixed(1) + '% of the world</dd><dt>Faith</dt><dd>' + (faithOf(c) ? 'The ' + esc(faithOf(c).name) + (c.faith > 0.6 ? ', devout' : '') : 'Old beliefs in spirits, no organised faith yet') + '</dd><dt>Discoveries</dt><dd>' + c.tech + ' of ' + TECHS.length + (nx ? ', next ' + nx.toLowerCase() : '') + '</dd>' +
+      '<dt>Language</dt><dd>' + (langOf(c) ? esc(langOf(c).name) : '-') + '</dd><dt>Allies</dt><dd>' + (alliesOf(c).length ? alliesOf(c).map(x => esc(nation(x))).join(', ') : 'None') + '</dd>' +
+      '<dt>Tamed animals</dt><dd>' + ((c.tamed || []).filter(id => S.species[id]).map(id => esc(S.species[id].domWhat) + ' (<i>' + esc(S.species[id].name) + '</i>)').join(', ') || 'None yet') + '</dd>' +
       '<dt>Wars fought</dt><dd>' + (c.wars || 0) + (foe ? ', now fighting ' + esc(nation(foe)) : '') + '</dd><dt>Wonders</dt><dd>' + (c.wonders || 0) + '</dd><dt>Geniuses</dt><dd>' + (c.geniuses || 0) + '</dd></dl>';
     if (nx) { const left = Math.max(0, techCost(c.tech) - c.rp) / (c.lastRate || 1) * TICK_CIV; h += '<div class="bars" style="margin-top:12px"><span>' + esc(nx.toLowerCase()) + '</span><div class="bar"><i style="width:' + Math.min(100, c.rp / techCost(c.tech) * 100) + '%;background:var(--k-tech)"></i></div></div><p class="small" style="margin-top:4px">At the current pace, ' + fmtIn(left) + ' to go.</p>'; }
     h += chart('cpop', 'Population over time', '', Z.t, [{ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: (Z.c[c.id] || []).map(v => v ? decP(v) : null) }], { log: true });
+    h += chart('cpow', 'Power over time', 'Overall strength compared with the rest of the world', Z.t, [{ n: c.name, c: css(hsl(c.hue, 0.65, 0.62)), v: ((Z.p || {})[c.id] || []).map(v => v || null) }], { fmt: v => Math.round(v) + '', h: 140 });
+    const gh = (c.govHist || []).slice().reverse();
+    if (gh.length) h += '<div class="sec">Government history</div><ul class="plain">' + gh.map((e, i) => '<li><b>' + (GOVS[e.g] || GOVS.Tribe).n + (i === 0 ? ' (now)' : '') + '</b><span>From Year ' + e.y.toLocaleString('en-US') + ' · ' + fullDate(e.at) + '</span></li>').join('') + '</ul>';
+    const past = (c.rulers || []).slice().reverse();
+    if (past.length) h += '<div class="sec">Past rulers</div><ul class="plain">' + past.map(r => '<li><b>' + esc((r.title || 'Ruler') + ' ' + r.n + (r.ep ? ' ' + r.ep : '')) + '</b><span>Year ' + r.from.toLocaleString('en-US') + ' to ' + (r.to || r.from).toLocaleString('en-US') + '</span></li>').join('') + '</ul>';
+    const fam = (c.famous || []).slice().reverse();
+    if (fam.length) h += '<div class="sec">Famous people</div><ul class="plain">' + fam.map(p => '<li><b>' + esc(p.n) + '</b><span>' + esc(cap1(p.w)) + ' · Year ' + p.y.toLocaleString('en-US') + '</span></li>').join('') + '</ul>';
     const mine = S.log.filter(l => l.x.includes(c.name)).slice(-10).reverse();
     if (mine.length) h += '<div class="sec">Recent history</div><ul class="log">' + mine.map(l => '<li><span class="tm">' + tm(l.at) + '</span><div><div class="when"><span class="kd" style="color:' + (KIND[l.k] || '#888') + ';background:' + (KIND[l.k] || '#888') + '22">' + KLABEL[l.k] + '</span>' + dayLabel(l.at) + ' · ' + esc(l.d) + '</div><div class="what">' + esc(l.x) + '</div></div></li>').join('') + '</ul>';
     return h;
   }
   function helpHTML() {
     let h = '<div class="help"><h3>The idea</h3><p>Your world lives on its own. Life evolves for about half an hour, then clever apes become the first people. From there, history runs in <b>real time</b>, even when your phone is locked. Camps grow into villages, towns and cities, and tribes become kingdoms, empires and republics.</p><p>Reaching the Space Age takes <b>about six months</b>, but every world is different. Wars, plagues and dark ages slow a people down. Golden ages, geniuses and peaceful trade speed them up. So it can be closer to four or eight months.</p>';
-    h += '<h3>Moving around the globe</h3><ul><li><b>Drag</b> to spin the planet.</li><li><b>Pinch</b> (or the + and − buttons) to zoom. Zoom in to read the names of towns.</li><li><b>Tap a place</b> to see who lives there.</li><li>The <b>circular arrow</b> button turns slow automatic spinning on or off.</li><li><b>World, Nations, Life</b> at the top of the globe change the colours: real terrain, one colour per nation, or one colour per species.</li></ul>';
+    h += '<h3>Moving around the globe</h3><ul><li><b>Drag</b> to spin the planet.</li><li><b>Pinch</b> (or the + and − buttons) to zoom. Zoom in to read the names of towns.</li><li><b>Tap a place</b> to see who lives there.</li><li>The <b>circular arrow</b> button turns slow automatic spinning on or off.</li><li><b>World, Nations, Faiths, Life</b> at the top of the globe change the colours: real terrain, one colour per nation, one colour per religion, or one colour per species.</li></ul>';
     h += '<h3>Time</h3><ul><li><b>Live</b>: the world moves in real time. This is the normal way to play.</li><li><b>1 h/min</b> and <b>1 day/min</b> fast forward. Whatever happens during fast forward is permanent.</li><li>When you come back after a while, the game replays what you missed and shows a summary.</li></ul>';
     h += '<h3>Your powers</h3><p>Pick a power under the globe, then tap the globe where you want it. Powers cost <b>spirit</b>, which refills by 3 every minute, up to 100. Everything you do is saved in History under <b>Your actions</b>.</p>';
     for (const [k, p] of Object.entries(POWERS)) h += '<div class="pl"><svg viewBox="0 0 20 20">' + ICONS[k] + '</svg><div><b>' + p.n + '</b><br><span>' + esc(p.d) + '</span></div><em>' + p.cost + ' spirit</em></div>';
-    h += '<h3>Other screens</h3><ul><li><b>History</b>: every age, discovery, war and action with its date and time. Filter to see only what you want.</li><li><b>Statistics</b>: population charts for the whole world and each nation. Tap a nation for its own page.</li><li>Tap the <b>world name</b> at the top to rename it, hide clouds or start a new world.</li></ul></div>';
+    h += '<h3>Governments</h3><p>Each nation chooses its own way to govern. Tribes unite under chiefs, and in the Bronze Age they crown kings. Later, revolutions and reforms can bring in other systems, especially after a new age begins, during a dark age or during a long war.</p>' + Object.values(GOVS).map(g => '<div class="pl" style="grid-template-columns:1fr"><div><b>' + g.n + '</b><br><span>' + esc(g.d) + '</span></div></div>').join('') +
+      '<h3>Civics</h3><p>Civics are choices the people make about how to live. A nation has 1 civic in the Stone Age and up to 4 later. Peoples sometimes swap one for another.</p>' + Object.values(CIVICS).map(k => '<div class="pl" style="grid-template-columns:1fr"><div><b>' + k.n + '</b><br><span>' + esc(k.d) + '</span></div></div>').join('') +
+      '<h3>Power</h3><p>Every nation is rated in military, science, economy, diplomacy, culture and faith. 100 means the best in the world in that field. Government, civics, size, discoveries, wonders, peace and faith all count. A strong military wins more battles, and the overall power decides who is the most powerful nation.</p>' +
+      '<h3>Alliances, trade and migrations</h3><p>Peaceful neighbours sign alliances and send soldiers when their ally is attacked. Trade routes link the capitals of neighbours at peace (dashed gold lines on the globe), and alliances show as green lines. Settlers sometimes leave to found towns or whole new peoples far away, and refugees flee floods, famines, eruptions and lost wars.</p>' +
+      '<h3>Climate and disasters</h3><p>Every few weeks the climate shifts into an ice age or a warm period, which changes where people can farm. Floods, droughts, earthquakes, wildfires and eruptions also strike on their own.</p>' +
+      '<h3>Languages and nature</h3><p>Each band starts with its own language. Languages split into new ones when peoples live apart, and Statistics shows them as family trees. People tame some animals as farm animals and pets, and hunt others until they vanish.</p>' +
+      '<h3>Space</h3><p>A moon circles your world. Once a nation reaches spaceflight, you will see rockets launch from its capital and satellites orbiting the globe, and later a lit base on the moon.</p>' +
+      '<h3>Following a nation</h3><p>On any nation\u2019s page, tap <b>Follow this nation</b>. Its name gets a gold star on the globe, its news is marked in gold in History (and has its own filter), and it comes first in the summary when you return.</p>' +
+      '<h3>Nations, faiths and famous people</h3><p>Every nation has a ruler: elders and chiefs at first, then kings and queens, emperors, and later elected presidents. Rulers earn nicknames from what happens during their reign, like the Builder or the Conqueror. Famous people (prophets, geniuses, generals, explorers and heroes of songs) are listed on each nation\u2019s page.</p><p>Around the time of farming, prophets found faiths. Missionaries spread them to neighbours in peace time, reformers split them, and nations of different faiths can fight holy wars.</p>' +
+      '<h3>Your backup</h3><p>Tap the world name at the top, then <b>Save a backup</b>. On iPhone choose <b>Save to Files</b>. If your world is ever lost, use <b>Load a backup</b> on the same screen.</p>' +
+      '<h3>Other screens</h3><ul><li><b>History</b>: every age, discovery, war and action with its date and time. Filter to see only what you want.</li><li><b>Statistics</b>: population charts for the whole world and each nation, all faiths, and the <b>tree of life</b>. Tap a nation or a creature for its own page.</li><li>Tap the <b>world name</b> at the top to rename it, hide clouds or start a new world.</li></ul></div>';
     return h;
   }
 
@@ -1729,7 +2290,12 @@ void main(){
   }
 
   // ---------- saving ----------
-  function snapshotStr() { let str = serialize(Date.now()); if (str.length > 240000) { S.log = S.log.slice(-150); str = serialize(Date.now()); } return str; }
+  function snapshotStr() {
+    let str = serialize(Date.now());
+    if (dbRef && str.length > 240000) { S.log = S.log.slice(-120); str = serialize(Date.now()); }
+    if (dbRef && str.length > 240000 && S.tree) { const T = S.tree; const gone = Object.keys(T).filter(k => T[k][3]).sort((a, b) => T[a][6] - T[b][6]); for (const k of gone.slice(0, Math.max(0, Object.keys(T).length - 150))) { const up = T[k][1]; for (const j in T) if (String(T[j][1]) === k) T[j][1] = up; for (const x of Object.values(S.species)) if (String(x.anc) === k) x.anc = up; delete T[k]; } S.fossils = S.fossils.slice(-10); str = serialize(Date.now()); }
+    return str;
+  }
   let saveTimer = 0;
   function queueSave(ms) { clearTimeout(saveTimer); saveTimer = setTimeout(save, ms); }
   async function save() {
@@ -1795,10 +2361,12 @@ void main(){
     const idx = mark ? S.log.lastIndexOf(mark) : -1;
     const fresh = idx >= 0 ? S.log.slice(idx + 1) : S.log.slice();
     const rank = { big: 0, you: 1, tech: 2, nation: 3, wonder: 4, war: 5, culture: 6, city: 7, death: 8, life: 9, peace: 10, nature: 11 };
-    const top = fresh.slice().sort((a, b) => (rank[a.k] - rank[b.k]) || (b.at - a.at)).slice(0, 9).sort((a, b) => a.at - b.at);
+    const favC = S.fav && S.cultures[S.fav], favNews = favC ? fresh.filter(l => l.x.includes(favC.name)).slice(-4) : [];
+    const top = fresh.filter(l => !favNews.includes(l)).sort((a, b) => (rank[a.k] - rank[b.k]) || (b.at - a.at)).slice(0, favNews.length ? 6 : 9).sort((a, b) => a.at - b.at);
     const eraAfter = eraName();
     openModal('<div class="kicker">While you were away · ' + fmtDur(total) + '</div><h2>' + (eraAfter !== eraBefore ? 'Your world entered the ' + esc(eraAfter) : esc(S.name) + ' lived on') + '</h2>' +
       '<p>' + fresh.length + ' events were written into history' + (S.cities.length > citiesBefore ? ', ' + (S.cities.length - citiesBefore) + ' new settlements were founded' : '') + (S.stats.born > bornBefore ? ', and ' + (S.stats.born - bornBefore).toLocaleString('en-US') + ' new species appeared' : '') + '. It is now ' + esc(dateLabel()) + '.</p>' +
+      (favNews.length ? '<div class="kicker" style="margin-top:4px">\u2605 News from ' + esc(nation(favC)) + '</div><ul class="away">' + favNews.map(l => '<li><span class="dot" style="background:#f3c766"></span><span>' + esc(l.x) + '<small>' + dayLabel(l.at) + ', ' + tm(l.at) + ' · ' + esc(l.d) + '</small></span></li>').join('') + '</ul><div class="kicker" style="margin-top:4px">Around the world</div>' : '') +
       (top.length ? '<ul class="away">' + top.map(l => '<li><span class="dot" style="background:' + (KIND[l.k] || '#888') + '"></span><span>' + esc(l.x) + '<small>' + dayLabel(l.at) + ', ' + tm(l.at) + ' · ' + esc(l.d) + '</small></span></li>').join('') + '</ul>' : '<p>A quiet time. Nothing remarkable made it into the history.</p>') +
       '<div class="rowbtns"><button class="btn" id="mclose">Return to your world</button><button class="ghost" id="mhist">Open full history</button></div>');
     save();
@@ -1814,6 +2382,9 @@ void main(){
     if (id === 'mhelp') { closeModal(); setView('help'); }
     if (id === 'rename') { const v = ($('#wn').value || '').trim().slice(0, 40); if (v) { S.name = v; renderHeader(); save(); } closeModal(); }
     if (id === 'clouds') { clouds = !clouds; e.target.textContent = clouds ? 'Hide clouds' : 'Show clouds'; }
+    if (id === 'bksave') exportBackup();
+    if (id === 'bkload') $('#bkfile').click();
+    if (id === 'bkyes' && pendingBackup) { const str = pendingBackup; pendingBackup = null; try { deserialize(str); S.fast = 1; ready = true; texDirty = true; inspectTile = -1; $('#pin').hidden = true; statSel = 0; spSel = 0; treeOpen = false; renderAll(); closeModal(); toast('Backup loaded.'); save(); if (Date.now() - S.syncAt > 5 * 60000) catchUp(true); } catch (err) { toast('That backup could not be loaded.'); } }
     if (id === 'reset1') { e.target.hidden = true; $('#reset2').hidden = false; $('#resetnote').hidden = false; }
     if (id === 'reset2') { closeModal(); const nm = ($('#wn').value || '').trim().slice(0, 40) || randomName(); startNew(nm); }
   });
@@ -1821,7 +2392,29 @@ void main(){
     openModal('<div class="kicker">Your world</div><h2>' + esc(S.name) + '</h2><p>Created ' + fullDate(S.created) + '. It is now ' + esc(dateLabel()) + ', in the ' + esc(eraName()) + '. You have used your powers ' + (S.stats.actions || 0) + ' times.</p>' +
       '<div class="field"><label for="wn">World name</label><input id="wn" maxlength="40" value="' + esc(S.name) + '"></div>' +
       '<div class="rowbtns"><button class="btn" id="rename">Save name</button><button class="ghost" id="clouds">' + (clouds ? 'Hide clouds' : 'Show clouds') + '</button><button class="ghost" id="mclose">Close</button></div>' +
+      '<div style="border-top:1px solid var(--line);padding-top:14px;display:grid;gap:8px"><b style="font-size:14px">Backup</b><p class="small" style="margin:0">Save your whole world as a file, and load it back if anything ever goes wrong.' + (S.lastBackup ? ' Last backup: ' + fullDate(S.lastBackup) + '.' : ' You have not made a backup yet.') + '</p><div class="rowbtns"><button class="btn" id="bksave">Save a backup</button><button class="ghost" id="bkload">Load a backup</button></div></div>' +
       '<div class="rowbtns" style="border-top:1px solid var(--line);padding-top:14px"><button class="ghost" id="reset1">Start a new world…</button><button class="btn danger" id="reset2" hidden>Erase this world and start over</button></div><p class="small" id="resetnote" hidden>This cannot be undone. The new world takes the name in the box above.</p>');
+  });
+  let pendingBackup = null;
+  async function exportBackup() {
+    const now = Date.now(); S.lastBackup = now;
+    const str = serialize(now), d = new Date(now), stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const filename = 'worldseed-' + S.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + stamp + '.json';
+    try {
+      const file = new File([str], filename, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Worldseed backup' }); toast('Backup ready. Choose "Save to Files" to keep it.'); save(); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; if (dl) { await dl.save({ filename, data: str }); toast('Backup saved.'); save(); return; } } catch (e) { }
+    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([str], { type: 'application/json' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Backup saved to your downloads.'); save(); } catch (e) { toast('This device could not save the file.'); }
+  }
+  $('#bkfile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      const str = await f.text(), o = JSON.parse(str);
+      if (o.v !== 2 || !o.maps) throw new Error('bad');
+      pendingBackup = str;
+      openModal('<div class="kicker">Load a backup</div><h2>' + esc(o.name) + '</h2><p>Saved ' + fullDate(o.savedAt) + '. Loading it replaces the world you have now. Time since the backup will be replayed, as if you had been away.</p><div class="rowbtns"><button class="btn danger" id="bkyes">Replace my world with this backup</button><button class="ghost" id="mclose">Cancel</button></div>');
+    } catch (err) { toast('That file is not a Worldseed backup.'); }
   });
   function randomName() { return pick(['Aster', 'Veloria', 'Thalassa', 'Orun', 'Mireth', 'Caldera', 'Ysolde', 'Pelagon', 'Ember', 'Nerith', 'Anatolia', 'Tisza']) + ' ' + pick(['Prime', 'II', 'Minor', 'Reach', 'Garden', 'Major']); }
   function startNew(nm, note) {
